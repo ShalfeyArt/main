@@ -321,7 +321,8 @@
                         <input name="phone" type="tel" placeholder="Ваш телефон" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none">
                         <input name="costume" type="text" placeholder="Название костюма" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none">
                         <input name="dates" type="text" placeholder="Желаемые даты аренды" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none">
-                        <button type="submit" class="w-full bg-sage-green text-white font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors">Скопировать и перейти в Telegram</button>
+                        <!-- ИЗМЕНЕНИЕ: Текст кнопки -->
+                        <button type="submit" class="w-full bg-sage-green text-white font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors">Отправить заявку в Telegram</button>
                     </form>
                 </div>
             </div>
@@ -340,7 +341,8 @@
                         <h3 class="text-3xl font-handwritten text-gray-800">Создание шкатулки "Медное сокровище"</h3>
                         <p class="text-gray-600 my-3">На этом МК вы освоите техники декорирования и состаривания, научитесь создавать имитацию чеканки по меди и заберете с собой уникальную шкатулку, сделанную своими руками.</p>
                         <p class="font-bold text-xl text-sage-green">Стоимость: 3000 руб.</p>
-                        <button class="mt-4 bg-sage-green text-white font-bold py-2 px-6 rounded-lg hover:bg-opacity-90 transition-colors" onclick="copyAndGoToTelegram('Здравствуйте! Хочу записаться на МК по созданию шкатулки.')">Записаться</button>
+                        <!-- ИЗМЕНЕНИЕ: вызов функции -->
+                        <button class="mt-4 bg-sage-green text-white font-bold py-2 px-6 rounded-lg hover:bg-opacity-90 transition-colors" onclick="signUpViaTelegram('Здравствуйте! Хочу записаться на МК по созданию шкатулки.')">Записаться</button>
                     </div>
                 </div>
                 <div data-animate="fade-up" class="flex flex-col md:flex-row-reverse items-center gap-8 bg-white p-8 rounded-lg shadow-md">
@@ -349,14 +351,16 @@
                         <h3 class="text-3xl font-handwritten text-gray-800">Роспись новогодних игрушек</h3>
                         <p class="text-gray-600 my-3">Создайте свой собственный набор уникальных ёлочных украшений! Мы предоставим все материалы: деревянные заготовки, краски, блёстки и декор. Погрузитесь в атмосферу праздника!</p>
                         <p class="font-bold text-xl text-sage-green">Стоимость: 2500 руб.</p>
-                        <button class="mt-4 bg-sage-green text-white font-bold py-2 px-6 rounded-lg hover:bg-opacity-90 transition-colors" onclick="copyAndGoToTelegram('Здравствуйте! Хочу записаться на МК по росписи игрушек.')">Записаться</button>
+                        <!-- ИЗМЕНЕНИЕ: вызов функции -->
+                        <button class="mt-4 bg-sage-green text-white font-bold py-2 px-6 rounded-lg hover:bg-opacity-90 transition-colors" onclick="signUpViaTelegram('Здравствуйте! Хочу записаться на МК по росписи игрушек.')">Записаться</button>
                     </div>
                 </div>
             </div>
             <div data-animate="fade-up" class="mt-16 text-center bg-lavender-light p-8 md:p-12 rounded-lg">
                 <h3 class="text-4xl font-handwritten text-sage-green">Мастер-класс на вашем празднике</h3>
                 <p class="text-gray-700 my-4 max-w-2xl mx-auto">Хотите провести незабываемый девичник, день рождения или корпоратив? Мы можем организовать выездной мастер-класс на вашей территории или в нашей уютной мастерской.</p>
-                <button class="bg-white border-2 border-sage-green text-sage-green font-bold py-3 px-8 rounded-lg hover:bg-sage-green hover:text-white transition-colors" onclick="copyAndGoToTelegram('Здравствуйте! Хочу обсудить организацию выездного мастер-класса.')">Обсудить детали</button>
+                <!-- ИЗМЕНЕНИЕ: вызов функции -->
+                <button class="bg-white border-2 border-sage-green text-sage-green font-bold py-3 px-8 rounded-lg hover:bg-sage-green hover:text-white transition-colors" onclick="signUpViaTelegram('Здравствуйте! Хочу обсудить организацию выездного мастер-класса.')">Обсудить детали</button>
             </div>
         </section>
         
@@ -498,7 +502,8 @@
                         <input name="name" type="text" placeholder="Ваше имя" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none">
                         <input name="email" type="email" placeholder="Ваш Email или телефон" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none">
                         <textarea name="message" rows="5" placeholder="Ваше сообщение" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none"></textarea>
-                        <button type="submit" class="w-full bg-sage-green text-white font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors">Скопировать и перейти в Telegram</button>
+                        <!-- ИЗМЕНЕНИЕ: Текст кнопки -->
+                        <button type="submit" class="w-full bg-sage-green text-white font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors">Отправить сообщение в Telegram</button>
                     </form>
                 </div>
             </div>
@@ -519,7 +524,7 @@
         </div>
     </footer>
     
-    <!-- Модальное окно для уведомлений -->
+    <!-- Модальное окно для уведомлений (можно использовать для других целей) -->
     <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 opacity-0 invisible" onclick="this.classList.add('opacity-0', 'invisible')">
         <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm text-center" onclick="event.stopPropagation()">
             <p id="notification-message" class="text-gray-700"></p>
@@ -530,6 +535,7 @@
 
     <!-- =========== СКРИПТЫ =========== -->
     <script>
+        // ИЗМЕНЕНИЕ: Константа с именем пользователя Telegram
         const TELEGRAM_USERNAME = 'Taniko_67';
 
         // --- Логика для навигации по "страницам" ---
@@ -582,46 +588,19 @@
             modal.classList.remove('opacity-0', 'invisible');
         }
 
-        // --- Копирование в буфер обмена и редирект ---
-        async function copyToClipboardAndRedirect(text, successMessage) {
-            let copied = false;
-            try {
-                await navigator.clipboard.writeText(text);
-                copied = true;
-            } catch (err) {
-                const textArea = document.createElement("textarea");
-                textArea.value = text;
-                textArea.style.position = "fixed";
-                textArea.style.top = "-9999px";
-                textArea.style.left = "-9999px";
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                    copied = true;
-                } catch (err) {
-                    console.error('Fallback copy failed:', err);
-                }
-                document.body.removeChild(textArea);
-            }
-
-            if (copied) {
-                showNotification(successMessage);
-                setTimeout(() => {
-                    window.open(`https://t.me/${TELEGRAM_USERNAME}`, '_blank');
-                }, 2000);
-            } else {
-                showNotification('Не удалось скопировать текст. Пожалуйста, сделайте это вручную.');
-            }
+        // --- ИЗМЕНЕНИЕ: Новая функция для редиректа в Telegram с текстом ---
+        function redirectToTelegram(text) {
+            const encodedText = encodeURIComponent(text);
+            const url = `https://t.me/${TELEGRAM_USERNAME}?text=${encodedText}`;
+            window.open(url, '_blank');
         }
 
-        // --- Обработка форм ---
+        // --- ИЗМЕНЕНИЕ: Обработка форм с новой функцией ---
         document.getElementById('rental-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const form = e.target;
             const message = `🛎️ Новая заявка на аренду костюма:\n\n👤 Имя: ${form.elements.name.value}\n📞 Телефон: ${form.elements.phone.value}\n👘 Костюм: ${form.elements.costume.value}\n🗓 Даты: ${form.elements.dates.value}`;
-            copyToClipboardAndRedirect(message, 'Заявка скопирована! Перенаправляем в Telegram...');
+            redirectToTelegram(message);
             form.reset();
         });
         
@@ -629,12 +608,13 @@
             e.preventDefault();
             const form = e.target;
             const message = `📝 Новое сообщение с сайта:\n\n👤 Имя: ${form.elements.name.value}\n📧 Контакт: ${form.elements.email.value}\n\n💬 Сообщение:\n${form.elements.message.value}`;
-            copyToClipboardAndRedirect(message, 'Сообщение скопировано! Перенаправляем в Telegram...');
+            redirectToTelegram(message);
             form.reset();
         });
         
-        function copyAndGoToTelegram(message) {
-            copyToClipboardAndRedirect(message, 'Сообщение скопировано! Перенаправляем в Telegram...');
+        // --- ИЗМЕНЕНИЕ: Функция для кнопок записи на МК ---
+        function signUpViaTelegram(message) {
+            redirectToTelegram(message);
         }
 
 
@@ -664,4 +644,3 @@
 
 </body>
 </html>
-
