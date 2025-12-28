@@ -6,185 +6,261 @@
     <title>Шалфей — Творческая мастерская</title>
     <link rel="icon" href="https://raw.githubusercontent.com/ShalfeyArt/main/refs/heads/main/shalfey.ico" type="image/x-icon">
     
-    <!-- Подключение Tailwind CSS для стилизации -->
+    <!-- Подключение Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Подключение шрифтов от Google Fonts -->
+    <!-- Шрифты -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     
-    <!-- Иконки (для соцсетей) -->
+    <!-- Иконки -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-    <style>
-        /* Дополнительные стили и настройка шрифтов */
-        html {
-            scroll-behavior: smooth;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #FBF9F6; /* Молочный фон */
-            color: #4A4A4A; /* Темно-серый текст */
-        }
-        h1, h2, h3, h4, h5, h6, .font-handwritten {
-            font-family: 'Caveat', cursive;
-        }
-        .sage-green { color: #8A9A5B; }
-        .bg-sage-green { background-color: #8A9A5B; }
-        .border-sage-green { border-color: #8A9A5B; }
-        
-        .lavender { color: #E6E6FA; }
-        .bg-lavender-light { background-color: #F5F5FD; }
+    <!-- Firebase SDK (Modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        /* Стили для активной ссылки в навигации */
-        .nav-link.active {
-            color: #8A9A5B;
-            font-weight: bold;
-            border-bottom: 2px solid #8A9A5B;
-        }
-        
-        /* Плавные переходы для секций */
-        .page-section {
-            display: none; /* Все секции по умолчанию скрыты */
-            animation: fadeIn 0.8s;
-        }
-        .page-section.active {
-            display: block; /* Активная секция отображается */
-        }
+        const firebaseConfig = {
+            apiKey: "AIzaSyA8roOb63vM_ZaBt11x8B1b132gQBiG29A",
+            authDomain: "shalf-aad46.firebaseapp.com",
+            projectId: "shalf-aad46",
+            storageBucket: "shalf-aad46.firebasestorage.app",
+            messagingSenderId: "131850620388",
+            appId: "1:131850620388:web:1afd6733af73f96af0cbf1",
+            measurementId: "G-XN22P9DJBZ"
+        };
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        /* --- Стили для анимации при прокрутке --- */
-        [data-animate] {
-            opacity: 0;
-            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-        }
-        .is-visible {
-            opacity: 1;
-            transform: none !important;
-        }
-        [data-animate="fade-up"] { transform: translateY(40px); }
-        [data-animate="fade-in"] { /* Только прозрачность */ }
-        [data-animate="zoom-in"] { transform: scale(0.9); }
-        
-        /* --- Стили для модального окна уведомлений --- */
-        #notification-modal {
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
+        // Авторизация для доступа к БД
+        signInAnonymously(auth).then(() => {
+            console.log("Connected to Firebase anonymously");
+            loadContent();
+        }).catch((error) => {
+            console.error("Auth Error", error);
+        });
 
-        /* =========== АНИМАЦИЯ ЗАГРУЗКИ (PRELOADER) =========== */
-        #preloader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #1a1a1a;
-            z-index: 9999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: opacity 0.8s ease, visibility 0.8s ease;
-        }
-        #preloader.hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
-        #preloader-logo {
-            width: 200px;
-            height: auto;
-        }
-        #preloader-logo .sage-path {
-            stroke-dasharray: 1500;
-            stroke-dashoffset: 1500;
-            animation: draw 3.5s ease-in-out forwards;
-        }
-        @keyframes draw {
-            to {
-                stroke-dashoffset: 0;
+        // Функция загрузки контента
+        async function loadContent() {
+            const sections = ['rentals', 'workshops', 'handmade'];
+            
+            for (const section of sections) {
+                const container = document.getElementById(`${section}-container`);
+                if (!container) continue;
+
+                // Очистка контейнера (кроме статических элементов, если есть)
+                container.innerHTML = '<div class="col-span-full text-center py-10"><i class="fas fa-spinner fa-spin text-3xl text-sage-green"></i></div>';
+
+                try {
+                    const q = query(collection(db, "products"), where("category", "==", section)); // Можно добавить orderBy("createdAt") если добавить поле даты
+                    const querySnapshot = await getDocs(q);
+                    
+                    container.innerHTML = ''; // Убираем спиннер
+
+                    if (querySnapshot.empty) {
+                        container.innerHTML = '<div class="col-span-full text-center text-gray-500 italic">В этом разделе пока пусто...</div>';
+                        return;
+                    }
+
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const cardHTML = createCardHTML(data, section);
+                        container.insertAdjacentHTML('beforeend', cardHTML);
+                    });
+
+                    // Инициализация слайдеров после добавления элементов в DOM
+                    initializeCardSliders();
+                    // Инициализация анимации появления
+                    runAnimations(container);
+
+                } catch (error) {
+                    console.error(`Error loading ${section}:`, error);
+                    container.innerHTML = '<div class="col-span-full text-center text-red-400">Не удалось загрузить данные. Проверьте соединение.</div>';
+                }
             }
         }
 
-        /* =========== АНИМАЦИЯ БУРГЕР-МЕНЮ =========== */
-        #mobile-menu-button {
-            width: 30px;
-            height: 24px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            cursor: pointer;
-            position: relative;
-            background: transparent;
-            border: none;
-        }
-        .burger-line {
-            width: 100%;
-            height: 3px;
-            background-color: #4A4A4A;
-            border-radius: 3px;
-            transition: all 0.3s ease-in-out;
-        }
-        #mobile-menu-button.open .burger-line-1 {
-            transform: rotate(45deg) translate(7px, 7px);
-        }
-        #mobile-menu-button.open .burger-line-2 {
-            opacity: 0;
-        }
-        #mobile-menu-button.open .burger-line-3 {
-            transform: rotate(-45deg) translate(7px, -7px);
-        }
-        
-        /* =========== СТИЛИ ДЛЯ КАРУСЕЛЕЙ =========== */
-        .dots-container .dot {
-            transition: background-color 0.3s ease;
-        }
-        .dots-container .dot.active {
-            background-color: #8A9A5B;
-        }
-        
-        .plant-carousel {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-        .plant-carousel::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, Opera */
+        // Генерация HTML карточки
+        function createCardHTML(item, type) {
+            // Обработка изображений (массив или строка)
+            let images = Array.isArray(item.images) ? item.images : [item.images || 'https://via.placeholder.com/400x500?text=No+Image'];
+            if (images.length === 0) images = ['https://via.placeholder.com/400x500?text=No+Image'];
+
+            // Слайды
+            const slidesHTML = images.map((img, index) => 
+                `<div class="slide ${index === 0 ? 'active' : ''}"><img src="${img}" alt="${item.title}" class="w-full h-full object-cover"></div>`
+            ).join('');
+
+            // Точки навигации
+            const dotsHTML = images.length > 1 ? `
+                <div class="dots-container flex justify-center space-x-2 mb-4">
+                    ${images.map((_, index) => `<button class="dot w-2.5 h-2.5 bg-gray-300 rounded-full ${index === 0 ? 'active' : ''}"></button>`).join('')}
+                </div>` : '<div class="mb-4"></div>'; // Пустой блок для отступа
+
+            // Кнопки навигации
+            const navButtonsHTML = images.length > 1 ? `
+                <button class="slider-prev absolute top-1/2 left-2 transform -translate-y-1/2 bg-white/60 hover:bg-white rounded-full p-2 shadow-md transition z-10"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
+                <button class="slider-next absolute top-1/2 right-2 transform -translate-y-1/2 bg-white/60 hover:bg-white rounded-full p-2 shadow-md transition z-10"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></button>
+            ` : '';
+
+            // Цена и действие
+            let priceBlock = '';
+            let actionButton = '';
+
+            if (type === 'rentals') {
+                priceBlock = `
+                    <div class="mt-4">
+                        <p class="text-lg font-bold text-sage-green">Стоимость аренды:</p>
+                        <p class="text-gray-600">${item.price}</p>
+                    </div>`;
+            } else if (type === 'workshops') {
+                priceBlock = `<p class="font-bold text-xl text-sage-green mt-3">Стоимость: ${item.price} руб.</p>`;
+                actionButton = `<button class="mt-4 bg-sage-green text-white font-bold py-2 px-6 rounded-lg hover:bg-opacity-90 transition-colors" onclick="window.prepareOrder('${item.title}', 'Мастер-класс')">Записаться</button>`;
+            } else {
+                priceBlock = `<p class="mt-4 text-xl font-bold text-sage-green">Цена: ${item.price} руб.</p>`;
+            }
+
+            // Обертка отличается для Workshops (горизонтальная) и остальных (вертикальная)
+            if (type === 'workshops') {
+                return `
+                <div data-animate="fade-up" class="flex flex-col md:flex-row items-center gap-8 bg-white p-8 rounded-lg shadow-md mb-8">
+                    <div class="w-full md:w-1/3 h-64 relative rounded-lg overflow-hidden group">
+                         <div class="card-slider-container w-full h-full" data-slider-id="${Math.random().toString(36).substr(2, 9)}">
+                            ${slidesHTML}
+                            ${navButtonsHTML}
+                         </div>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-3xl font-handwritten text-gray-800">${item.title}</h3>
+                        <p class="text-gray-600 my-3">${item.description}</p>
+                        ${priceBlock}
+                        ${actionButton}
+                    </div>
+                </div>`;
+            } else {
+                return `
+                <div data-animate="zoom-in" class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col h-full">
+                    <div class="card-slider-container h-80 relative" data-slider-id="${Math.random().toString(36).substr(2, 9)}">
+                        ${slidesHTML}
+                        ${navButtonsHTML}
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        ${dotsHTML}
+                        <h4 class="text-2xl font-handwritten font-bold text-gray-800">${item.title}</h4>
+                        <p class="text-gray-600 mt-2 flex-grow">${item.description}</p>
+                        ${priceBlock}
+                    </div>
+                </div>`;
+            }
         }
 
-        /* Стили для слайдера внутри карточки */
-        .card-slider-container {
-            position: relative;
-            height: 24rem; /* h-96 */
-        }
-        .card-slider-container .slide {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            transition: opacity 0.4s ease-in-out;
-            visibility: hidden;
-        }
-        .card-slider-container .slide.active {
-            opacity: 1;
-            visibility: visible;
-        }
+        // Глобальная функция для открытия формы заказа (для кнопок)
+        window.prepareOrder = (title, type) => {
+            // Скролл к форме контактов или открытие модалки (здесь используем скролл к форме аренды как универсальной или создадим скрытые поля)
+            const rentalSection = document.getElementById('rentals');
+            showPage('rentals'); // Переключаем на вкладку с формой
+            
+            // Заполняем поле "Костюм" или создаем универсальное поле
+            const costumeInput = document.querySelector('input[name="costume"]');
+            if(costumeInput) {
+                costumeInput.value = `${type}: ${title}`;
+                costumeInput.focus();
+            }
+        };
+
+        // Отправка заказа в Firestore
+        window.submitOrder = async (event, formId, type) => {
+            event.preventDefault();
+            const form = document.getElementById(formId);
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            data.type = type; // 'rentals' или 'contact'
+            data.status = 'new';
+            data.createdAt = new Date().toISOString();
+
+            const btn = form.querySelector('button[type="submit"]');
+            const originalText = btn.innerText;
+            btn.innerText = "Отправка...";
+            btn.disabled = true;
+
+            try {
+                // Сохраняем в Firebase
+                await addDoc(collection(db, "orders"), data);
+                
+                // Показываем уведомление
+                showNotification("Ваша заявка успешно отправлена! Мы скоро свяжемся с вами.");
+                
+                // Опционально: Отправка в телеграм (как раньше)
+                // const tgMessage = `Новый заказ (${type}):\n${JSON.stringify(data, null, 2)}`;
+                // redirectToTelegram(tgMessage);
+
+                form.reset();
+            } catch (e) {
+                console.error("Ошибка при отправке заказа: ", e);
+                showNotification("Произошла ошибка. Попробуйте написать нам в WhatsApp.");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        // Экспорт функций слайдера для доступа из loadContent
+        window.initializeCardSliders = initializeCardSliders;
+        window.runAnimations = runAnimations;
+
+    </script>
+
+    <style>
+        /* Стили из оригинала */
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background-color: #FBF9F6; color: #4A4A4A; }
+        h1, h2, h3, h4, h5, h6, .font-handwritten { font-family: 'Caveat', cursive; }
+        .sage-green { color: #8A9A5B; }
+        .bg-sage-green { background-color: #8A9A5B; }
+        .border-sage-green { border-color: #8A9A5B; }
+        .lavender { color: #E6E6FA; }
+        .bg-lavender-light { background-color: #F5F5FD; }
+        .nav-link.active { color: #8A9A5B; font-weight: bold; border-bottom: 2px solid #8A9A5B; }
+        .page-section { display: none; animation: fadeIn 0.8s; }
+        .page-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        [data-animate] { opacity: 0; transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+        .is-visible { opacity: 1; transform: none !important; }
+        [data-animate="fade-up"] { transform: translateY(40px); }
+        [data-animate="zoom-in"] { transform: scale(0.9); }
+        #notification-modal { transition: opacity 0.3s ease, visibility 0.3s ease; }
+        #preloader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a1a; z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.8s ease, visibility 0.8s ease; }
+        #preloader.hidden { opacity: 0; visibility: hidden; }
+        #preloader-logo { width: 200px; height: auto; }
+        #preloader-logo .sage-path { stroke-dasharray: 1500; stroke-dashoffset: 1500; animation: draw 3.5s ease-in-out forwards; }
+        @keyframes draw { to { stroke-dashoffset: 0; } }
+        #mobile-menu-button { width: 30px; height: 24px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; position: relative; background: transparent; border: none; }
+        .burger-line { width: 100%; height: 3px; background-color: #4A4A4A; border-radius: 3px; transition: all 0.3s ease-in-out; }
+        #mobile-menu-button.open .burger-line-1 { transform: rotate(45deg) translate(7px, 7px); }
+        #mobile-menu-button.open .burger-line-2 { opacity: 0; }
+        #mobile-menu-button.open .burger-line-3 { transform: rotate(-45deg) translate(7px, -7px); }
+        .dots-container .dot { transition: background-color 0.3s ease; }
+        .dots-container .dot.active { background-color: #8A9A5B; }
+        .card-slider-container .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.4s ease-in-out; visibility: hidden; }
+        .card-slider-container .slide.active { opacity: 1; visibility: visible; }
     </style>
 </head>
 <body class="antialiased">
 
-    <!-- =========== АНИМАЦИЯ ЗАГРУЗКИ =========== -->
+    <!-- Preloader -->
     <div id="preloader">
         <svg id="preloader-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
             <path class="sage-path" d="M100 180 V 50 M100 130 C75 125 75 155 100 150 M100 130 C125 125 125 155 100 150 M100 100 C80 95 80 120 100 115 M100 100 C120 95 120 120 100 115 M100 75 C90 70 90 90 100 85 M100 75 C110 70 110 90 100 85 M80 160 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 M120,165 a4,4 0 1,0 -8,0 a4,4 0 1,0 8,0 M75 90 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
     </div>
 
-    <!-- =========== ШАПКА САЙТА =========== -->
+    <!-- Header -->
     <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
         <div class="container mx-auto px-6 py-3 flex justify-between items-center">
             <a href="#" class="flex items-center gap-3" onclick="showPage('home')">
@@ -222,10 +298,9 @@
         </div>
     </header>
 
-    <!-- =========== ОСНОВНОЕ СОДЕРЖИМОЕ =========== -->
     <main class="container mx-auto px-6 py-8 md:py-12 overflow-x-hidden">
 
-        <!-- ===== Секция: Главная страница ===== -->
+        <!-- Home -->
         <section id="home" class="page-section">
             <div class="text-center mb-16">
                 <h1 data-animate="fade-up" class="text-5xl md:text-7xl font-bold text-sage-green mb-4">Место, где природа, волшебство и творчество встречаются</h1>
@@ -234,19 +309,19 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <div data-animate="zoom-in" class="group relative overflow-hidden rounded-lg shadow-lg cursor-pointer" onclick="showPage('rentals')">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/kostum%20krasny%20plasch%20eshe%20photo.jpg" alt="[Изображение аренды костюмов]" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/kostum%20krasny%20plasch%20eshe%20photo.jpg" alt="Аренда" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
                     <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
                         <h3 class="text-white text-3xl font-handwritten font-bold">Аренда костюмов</h3>
                     </div>
                 </div>
                 <div data-animate="zoom-in" data-delay="100" class="group relative overflow-hidden rounded-lg shadow-lg cursor-pointer" onclick="showPage('workshops')">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" alt="[Изображение мастер-классов]" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" alt="МК" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
                     <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
                         <h3 class="text-white text-3xl font-handwritten font-bold">Мастер-классы</h3>
                     </div>
                 </div>
                 <div data-animate="zoom-in" data-delay="300" class="group relative overflow-hidden rounded-lg shadow-lg cursor-pointer" onclick="showPage('handmade')">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kluchnitsa%20dlya%20kluchey%20vvide%20domikov.jpg" alt="[Изображение изделий ручной работы]" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kluchnitsa%20dlya%20kluchey%20vvide%20domikov.jpg" alt="Изделия" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
                     <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
                         <h3 class="text-white text-3xl font-handwritten font-bold">Изделия ручной работы</h3>
                     </div>
@@ -272,188 +347,99 @@
             </div>
         </section>
 
-        <!-- ===== Секция: Аренда костюмов (ОБНОВЛЕНО) ===== -->
+        <!-- Rentals -->
         <section id="rentals" class="page-section">
             <div class="text-center mb-12">
-                <h2 data-animate="fade-up" class="text-5xl md:text-6xl font-handwritten text-sage-green">Аренда костюмов: Волшебные образы</h2>
+                <h2 data-animate="fade-up" class="text-5xl md:text-6xl font-handwritten text-sage-green">Аренда костюмов</h2>
                 <p data-animate="fade-up" data-delay="100" class="text-lg text-gray-600 mt-2">Выберите образ для вашей фотосессии, праздника или фестиваля.</p>
             </div>
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Карточка 1: Темное золото -->
-                <div data-animate="zoom-in" class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
-                    <!-- Слайдер для карточки -->
-                    <div class="card-slider-container" data-slider-id="costume-gold">
-                        <div class="slide active"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/blackgold-demonstraciyanakidkiteploy.jpg" alt="Костюм Темное золото 1" class="w-full h-full object-cover"></div>
-                        <div class="slide"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/blackgold-smitritvzerkalodemonstriuyakorony.jpg" alt="Костюм Темное золото 2" class="w-full h-full object-cover"></div>
-                        <div class="slide"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/blackgold-vplonyrost.jpg" alt="Костюм Темное золото 3" class="w-full h-full object-cover"></div>
-                        
-                        <!-- Кнопки управления -->
-                        <button class="slider-prev absolute top-1/2 left-2 transform -translate-y-1/2 bg-white/60 hover:bg-white rounded-full p-2 shadow-md transition z-10"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
-                        <button class="slider-next absolute top-1/2 right-2 transform -translate-y-1/2 bg-white/60 hover:bg-white rounded-full p-2 shadow-md transition z-10"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></button>
-                    </div>
-                    <div class="p-6 flex flex-col flex-grow">
-                        <div class="dots-container flex justify-center space-x-2 mb-4">
-                            <button class="dot w-2.5 h-2.5 bg-gray-300 rounded-full"></button>
-                            <button class="dot w-2.5 h-2.5 bg-gray-300 rounded-full"></button>
-                            <button class="dot w-2.5 h-2.5 bg-gray-300 rounded-full"></button>
-                        </div>
-                        <h4 class="text-2xl font-handwritten font-bold text-gray-800">Костюм "Темное золото"</h4>
-                        <p class="text-gray-600 mt-2 flex-grow">Элегантный черный костюм с позолоченной отделкой. Идеально подойдет для создания загадочного и величественного образа.</p>
-                        <div class="mt-4">
-                            <p class="text-lg font-bold text-sage-green">Стоимость аренды:</p>
-                            <ul class="list-disc list-inside text-gray-600"><li>1 день: 800 руб.</li><li>1 неделя: 2500 руб.</li></ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Карточка 2: Красная мантия -->
-                <div data-animate="zoom-in" data-delay="100" class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
-                    <div class="card-slider-container" data-slider-id="costume-red">
-                        <div class="slide active"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kostum%20krasny%20plasch%20eshe%20photo.jpg" alt="Костюм Красная мантия 1" class="w-full h-full object-cover"></div>
-                        <div class="slide"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/krashy%20plasch%20kostum.jpg" alt="Костюм Красная мантия 2" class="w-full h-full object-cover"></div>
-                        
-                        <button class="slider-prev absolute top-1/2 left-2 transform -translate-y-1/2 bg-white/60 hover:bg-white rounded-full p-2 shadow-md transition z-10"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
-                        <button class="slider-next absolute top-1/2 right-2 transform -translate-y-1/2 bg-white/60 hover:bg-white rounded-full p-2 shadow-md transition z-10"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></button>
-                    </div>
-                    <div class="p-6 flex flex-col flex-grow">
-                        <div class="dots-container flex justify-center space-x-2 mb-4">
-                            <button class="dot w-2.5 h-2.5 bg-gray-300 rounded-full"></button>
-                            <button class="dot w-2.5 h-2.5 bg-gray-300 rounded-full"></button>
-                        </div>
-                        <h4 class="text-2xl font-handwritten font-bold text-gray-800">Костюм "Красная мантия"</h4>
-                        <p class="text-gray-600 mt-2 flex-grow">Яркий и запоминающийся образ с красной мантией. Отлично смотрится на фотографиях и подходит для ролей сказочных персонажей.</p>
-                        <div class="mt-4">
-                            <p class="text-lg font-bold text-sage-green">Стоимость аренды:</p>
-                            <ul class="list-disc list-inside text-gray-600"><li>1 день: 800 руб.</li><li>1 неделя: 2500 руб.</li></ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Карточка 3: Лесная ведунья -->
-                <div data-animate="zoom-in" data-delay="200" class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
-                    <div class="card-slider-container" data-slider-id="costume-witch">
-                        <div class="slide active"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/vedmochka2.jpg" alt="Костюм Лесная ведунья 1" class="w-full h-full object-cover"></div>
-                        <div class="slide"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/vedmochka1.jpg" alt="Костюм Лесная ведунья 2" class="w-full h-full object-cover"></div>
-                        <div class="slide"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/esche%20vedmochki.jpg" alt="Костюм Лесная ведунья 3" class="w-full h-full object-cover"></div>
-
-                        <button class="slider-prev absolute top-1/2 left-2 transform -translate-y-1/2 bg-white/60 hover:bg-white rounded-full p-2 shadow-md transition z-10"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
-                        <button class="slider-next absolute top-1/2 right-2 transform -translate-y-1/2 bg-white/60 hover:bg-white rounded-full p-2 shadow-md transition z-10"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></button>
-                    </div>
-                    <div class="p-6 flex flex-col flex-grow">
-                        <div class="dots-container flex justify-center space-x-2 mb-4">
-                            <button class="dot w-2.5 h-2.5 bg-gray-300 rounded-full"></button>
-                            <button class="dot w-2.5 h-2.5 bg-gray-300 rounded-full"></button>
-                            <button class="dot w-2.5 h-2.5 bg-gray-300 rounded-full"></button>
-                        </div>
-                        <h4 class="text-2xl font-handwritten font-bold text-gray-800">Костюм "Лесная ведунья"</h4>
-                        <p class="text-gray-600 mt-2 flex-grow">Таинственный и аутентичный наряд лесной ведуньи. Включает многослойную одежду и аксессуары для полного погружения в образ.</p>
-                        <div class="mt-4">
-                            <p class="text-lg font-bold text-sage-green">Стоимость аренды:</p>
-                            <ul class="list-disc list-inside text-gray-600"><li>1 день: 800 руб.</li><li>1 неделя: 2500 руб.</li></ul>
-                        </div>
-                    </div>
-                </div>
+            <!-- ДИНАМИЧЕСКИЙ КОНТЕЙНЕР ДЛЯ КОСТЮМОВ -->
+            <div id="rentals-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Сюда подгружаются карточки из Firebase -->
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mt-16 bg-lavender-light p-8 md:p-12 rounded-lg" data-animate="fade-up">
                 <div>
                     <h3 class="text-3xl font-handwritten text-sage-green mb-4">Условия аренды</h3>
                     <ul class="space-y-3 text-gray-700">
-                        <li><i class="fas fa-check-circle text-sage-green mr-2"></i><strong>Залог:</strong> 3000 руб. (возвращается при сдаче костюма).</li>
-                        <li><i class="fas fa-check-circle text-sage-green mr-2"></i><strong>Примерка:</strong> Бесплатная, по предварительной записи.</li>
-                        <li><i class="fas fa-check-circle text-sage-green mr-2"></i><strong>Возврат:</strong> Костюм должен быть возвращен в чистом и неповрежденном виде.</li>
+                        <li><i class="fas fa-check-circle text-sage-green mr-2"></i><strong>Залог:</strong> 3000 руб.</li>
+                        <li><i class="fas fa-check-circle text-sage-green mr-2"></i><strong>Примерка:</strong> Бесплатная, по записи.</li>
+                        <li><i class="fas fa-check-circle text-sage-green mr-2"></i><strong>Возврат:</strong> В чистом виде.</li>
                     </ul>
                 </div>
                 <div>
                     <h3 class="text-3xl font-handwritten text-sage-green mb-4">Заявка на аренду</h3>
-                    <form id="rental-form" class="space-y-4">
+                    <form id="rental-form" class="space-y-4" onsubmit="submitOrder(event, 'rental-form', 'rentals')">
                         <input name="name" type="text" placeholder="Ваше имя" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none">
                         <input name="phone" type="tel" placeholder="Ваш телефон" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none">
                         <input name="costume" type="text" placeholder="Название костюма" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none">
                         <input name="dates" type="text" placeholder="Желаемые даты аренды" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none">
-                        <button type="submit" class="w-full bg-sage-green text-white font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors">Отправить заявку в Telegram</button>
+                        <button type="submit" class="w-full bg-sage-green text-white font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors">Отправить заявку</button>
                     </form>
                 </div>
             </div>
         </section>
 
-        <!-- ===== Секция: Мастер-классы ===== -->
+        <!-- Workshops -->
         <section id="workshops" class="page-section">
             <div class="text-center mb-12">
                 <h2 data-animate="fade-up" class="text-5xl md:text-6xl font-handwritten text-sage-green">Творческие мастер-классы</h2>
-                <p data-animate="fade-up" data-delay="100" class="text-lg text-gray-600 mt-2">Погрузитесь в атмосферу творчества и создайте что-то прекрасное своими руками.</p>
+                <p data-animate="fade-up" data-delay="100" class="text-lg text-gray-600 mt-2">Погрузитесь в атмосферу творчества.</p>
             </div>
-            <div class="space-y-12">
-                <div data-animate="fade-up" class="flex flex-col md:flex-row items-center gap-8 bg-white p-8 rounded-lg shadow-md">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" alt="[Изображение мастер-класса по созданию шкатулки]" class="w-full md:w-1/3 h-64 object-cover rounded-lg">
-                    <div class="flex-1">
-                        <h3 class="text-3xl font-handwritten text-gray-800">Создание шкатулки "Медное сокровище"</h3>
-                        <p class="text-gray-600 my-3">На этом МК вы освоите техники декорирования и состаривания, научитесь создавать имитацию чеканки по меди и заберете с собой уникальную шкатулку, сделанную своими руками.</p>
-                        <p class="font-bold text-xl text-sage-green">Стоимость: 1500 руб.</p>
-                        <button class="mt-4 bg-sage-green text-white font-bold py-2 px-6 rounded-lg hover:bg-opacity-90 transition-colors" onclick="signUpViaTelegram('Здравствуйте! Хочу записаться на МК по созданию шкатулки.')">Записаться</button>
-                    </div>
-                </div>
-                <div data-animate="fade-up" class="flex flex-col md:flex-row-reverse items-center gap-8 bg-white p-8 rounded-lg shadow-md">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/korobka%20elochnie%20igrushky.jpg" alt="[Изображение мастер-класса по созданию ёлочных игрушек]" class="w-full md:w-1/3 h-64 object-cover rounded-lg">
-                    <div class="flex-1">
-                        <h3 class="text-3xl font-handwritten text-gray-800">Роспись новогодних игрушек</h3>
-                        <p class="text-gray-600 my-3">Создайте свой собственный набор уникальных ёлочных украшений! Мы предоставим все материалы: деревянные заготовки, краски, блёстки и декор. Погрузитесь в атмосферу праздника!</p>
-                        <p class="font-bold text-xl text-sage-green">Стоимость: 1000 руб.</p>
-                        <button class="mt-4 bg-sage-green text-white font-bold py-2 px-6 rounded-lg hover:bg-opacity-90 transition-colors" onclick="signUpViaTelegram('Здравствуйте! Хочу записаться на МК по росписи игрушек.')">Записаться</button>
-                    </div>
-                </div>
+            
+            <!-- ДИНАМИЧЕСКИЙ КОНТЕЙНЕР ДЛЯ МК -->
+            <div id="workshops-container" class="space-y-12">
+                <!-- Карточки МК -->
             </div>
+
             <div data-animate="fade-up" class="mt-16 text-center bg-lavender-light p-8 md:p-12 rounded-lg">
                 <h3 class="text-4xl font-handwritten text-sage-green">Мастер-класс на вашем празднике</h3>
-                <p class="text-gray-700 my-4 max-w-2xl mx-auto">Хотите провести незабываемый девичник, день рождения или корпоратив? Мы можем организовать выездной мастер-класс на вашей территории или в нашей уютной мастерской.</p>
-                <button class="bg-white border-2 border-sage-green text-sage-green font-bold py-3 px-8 rounded-lg hover:bg-sage-green hover:text-white transition-colors" onclick="signUpViaTelegram('Здравствуйте! Хочу обсудить организацию выездного мастер-класса.')">Обсудить детали</button>
+                <p class="text-gray-700 my-4 max-w-2xl mx-auto">Организуем выездной мастер-класс на девичник, день рождения или корпоратив.</p>
+                <button class="bg-white border-2 border-sage-green text-sage-green font-bold py-3 px-8 rounded-lg hover:bg-sage-green hover:text-white transition-colors" onclick="window.prepareOrder('Выездной МК', 'Спецзаказ')">Обсудить детали</button>
             </div>
         </section>
 
-        <!-- ===== Секция: Изделия ручной работы ===== -->
+        <!-- Handmade -->
         <section id="handmade" class="page-section">
             <div class="text-center mb-12">
                 <h2 data-animate="fade-up" class="text-5xl md:text-6xl font-handwritten text-sage-green">Изделия ручной работы</h2>
-                <p data-animate="fade-up" data-delay="100" class="text-lg text-gray-600 mt-2">Уютные детали для вашего дома, созданные с душой.</p>
+                <p data-animate="fade-up" data-delay="100" class="text-lg text-gray-600 mt-2">Уютные детали для вашего дома.</p>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                <div data-animate="zoom-in" class="bg-white rounded-lg shadow-lg overflow-hidden"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kluchnitsa%20dlya%20kluchey%20vvide%20domikov.jpg" alt="[Изображение ключницы Уютные домики]" class="w-full h-80 object-cover"><div class="p-6"><h4 class="text-2xl font-handwritten font-bold text-gray-800">Ключница "Уютные домики"</h4><p class="text-gray-600 mt-2">Очаровательная деревянная ключница. Станет теплым элементом декора для вашей прихожей.</p><p class="mt-4 text-xl font-bold text-sage-green">Цена: 1500 руб.</p></div></div>
-                <div data-animate="zoom-in" data-delay="100" class="bg-white rounded-lg shadow-lg overflow-hidden"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" alt="[Изображение шкатулки Медное сокровище]" class="w-full h-80 object-cover"><div class="p-6"><h4 class="text-2xl font-handwritten font-bold text-gray-800">Шкатулка "Медное сокровище"</h4><p class="text-gray-600 mt-2">Изящная шкатулка с имитацией чеканки по меди для хранения ваших украшений.</p><p class="mt-4 text-xl font-bold text-sage-green">Цена: 800 — 1250 руб.</p><p class="text-gray-600 mt-2">В зависимости от размера </p></div></div>
-                <div data-animate="zoom-in" data-delay="200" class="bg-white rounded-lg shadow-lg overflow-hidden"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/elochny%20igrushky%20vnutry.jpg" alt="[Изображение набора ёлочных игрушек]" class="w-full h-80 object-cover"><div class="p-6"><h4 class="text-2xl font-handwritten font-bold text-gray-800">Набор ёлочных игрушек "Зимняя сказка"</h4><p class="text-gray-600 mt-2">Коллекция уникальных украшений ручной работы, которые добавят вашему празднику волшебства.</p><p class="mt-4 text-xl font-bold text-sage-green">Цена: 1000 руб.</p></div></div>
-                <div data-animate="zoom-in" data-delay="300" class="bg-white rounded-lg shadow-lg overflow-hidden"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/korzinka%20novogodnaya%20s%20elovimi%20vetochkamy%20i%20hlopok.jpg" alt="[Изображение новогодней композиции]" class="w-full h-80 object-cover"><div class="p-6"><h4 class="text-2xl font-handwritten font-bold text-gray-800">Композиция "Дыхание зимы"</h4><p class="text-gray-600 mt-2">Декоративная корзинка с еловыми ветками и хлопком для создания уютной атмосферы.</p><p class="mt-4 text-xl font-bold text-sage-green">Цена: 1100 руб.</p></div></div>
+            
+            <!-- ДИНАМИЧЕСКИЙ КОНТЕЙНЕР ДЛЯ ИЗДЕЛИЙ -->
+            <div id="handmade-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                <!-- Карточки товаров -->
             </div>
+
              <div data-animate="fade-up" class="mt-12 bg-lavender-light p-8 rounded-lg text-center">
                 <h3 class="text-3xl font-handwritten text-sage-green">Как заказать?</h3>
-                <p class="text-gray-700 mt-2">Все изделия уникальны. Для заказа понравившейся работы или обсуждения индивидуального дизайна, пожалуйста, свяжитесь с нами.</p>
+                <p class="text-gray-700 mt-2">Все изделия уникальны. Свяжитесь с нами для заказа.</p>
                 <button class="mt-4 bg-sage-green text-white font-bold py-3 px-8 rounded-lg hover:bg-opacity-90 transition-colors" onclick="showPage('contacts')">Связаться с нами</button>
             </div>
         </section>
         
-        <!-- ===== Секция: О нас ===== -->
+        <!-- About (Static) -->
         <section id="about" class="page-section">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 <div data-animate="fade-up" class="space-y-6">
                     <h2 class="text-5xl md:text-6xl font-handwritten text-sage-green">Наша история</h2>
                     <p class="text-gray-700 leading-relaxed">Путь к "Шалфею" начался с двух, казалось бы, разных увлечений: дизайна и психологии. Я всегда любила создавать красоту — шить, рисовать, работать с деревом. Параллельно я изучала психологию, погружаясь в темы женских кругов, арт-терапии и силы природы.</p>
-                    <p class="text-gray-700 leading-relaxed">В какой-то момент эти два пути сошлись. Я поняла, что творчество — это не просто создание вещей, это способ самовыражения, медитация и исцеление. Так родилась идея мастерской "Шалфей" — места, где каждая женщина может соприкоснуться со своей творческой энергией, найти поддержку и отдохнуть душой.</p>
+                    <p class="text-gray-700 leading-relaxed">В какой-то момент эти два пути сошлись. Я поняла, что творчество — это не просто создание вещей, это способ самовыражения, медитация и исцеление.</p>
                     <h3 class="text-3xl font-handwritten text-sage-green pt-4">Почему "Шалфей"?</h3>
-                    <p class="text-gray-700 leading-relaxed">Шалфей — это растение с мощной очищающей и защитной энергетикой. Он символизирует мудрость, здоровье и благополучие. Для нас "Шалфей" — это символ очищения пространства для нового, для творчества, для себя.</p>
+                    <p class="text-gray-700 leading-relaxed">Шалфей символизирует мудрость, здоровье и благополучие. Для нас это символ очищения пространства для нового, для творчества, для себя.</p>
                 </div>
                 <div data-animate="zoom-in" class="grid grid-cols-2 gap-4">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kostum%20krasny%20plasch%20eshe%20photo.jpg" alt="[Изображение процесса создания костюма]" class="rounded-lg shadow-lg object-cover w-full h-full aspect-[4/5]">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/korzinka%20novogodnaya%20s%20elovimi%20vetochkamy%20i%20hlopok.jpg" alt="[Изображение новогодней композиции]" class="rounded-lg shadow-lg object-cover w-full h-full mt-8 aspect-[4/5]">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/esche%20vedmochki.jpg" alt="[Изображение готового костюма ведьмы]" class="rounded-lg shadow-lg object-cover w-full h-full aspect-[4/5]">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" alt="[Изображение деталей ручной работы]" class="rounded-lg shadow-lg object-cover w-full h-full mt-8 aspect-[4/5]">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kostum%20krasny%20plasch%20eshe%20photo.jpg" alt="Photo 1" class="rounded-lg shadow-lg object-cover w-full h-full aspect-[4/5]">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/korzinka%20novogodnaya%20s%20elovimi%20vetochkamy%20i%20hlopok.jpg" alt="Photo 2" class="rounded-lg shadow-lg object-cover w-full h-full mt-8 aspect-[4/5]">
                 </div>
             </div>
         </section>
         
-        <!-- ===== Секция: Контакты ===== -->
+        <!-- Contacts -->
         <section id="contacts" class="page-section">
             <div class="text-center mb-12">
                 <h2 data-animate="fade-up" class="text-5xl md:text-6xl font-handwritten text-sage-green">Свяжитесь с нами</h2>
-                <p data-animate="fade-up" data-delay="100" class="text-lg text-gray-600 mt-2">Мы всегда рады вашим вопросам и идеям!</p>
             </div>
             <div data-animate="fade-up" class="grid grid-cols-1 md:grid-cols-2 gap-12 bg-white p-8 md:p-12 rounded-lg shadow-md">
                 <div class="space-y-6">
@@ -461,7 +447,7 @@
                         <h4 class="text-2xl font-handwritten text-gray-800 mb-2">Наши контакты</h4>
                         <p class="text-gray-700"><i class="fas fa-phone-alt text-sage-green mr-3"></i>+7 (920) 322-62-63</p>
                         <p class="text-gray-700"><i class="fab fa-whatsapp text-sage-green mr-3"></i><a href="https://wa.me/79203226263" target="_blank" class="hover:underline">Написать в WhatsApp</a></p>
-                        <p class="text-gray-700"><i class="fab fa-telegram-plane text-sage-green mr-3"></i><a href="https://t.me/Taniko_67" target="_blank" class="hover:underline">Написать в Telegram (личные сообщения)</a></p>
+                        <p class="text-gray-700"><i class="fab fa-telegram-plane text-sage-green mr-3"></i><a href="https://t.me/Taniko_67" target="_blank" class="hover:underline">Написать в Telegram</a></p>
                     </div>
                      <div>
                         <h4 class="text-2xl font-handwritten text-gray-800 mb-2">Мы в соцсетях</h4>
@@ -470,19 +456,14 @@
                            <a href="https://t.me/shalfeyart" target="_blank" class="text-gray-500 hover:text-sage-green"><i class="fab fa-telegram-plane"></i> (канал)</a>
                         </div>
                     </div>
-                    <div>
-                        <h4 class="text-2xl font-handwritten text-gray-800 mb-2">Адрес мастерской</h4>
-                        <p class="text-gray-700"><i class="fas fa-map-marker-alt text-sage-green mr-3"></i>смоленская область деревня станички улица полевая дом 12</p>
-                        <p class="text-sm text-gray-500">(визиты по предварительной договоренности)</p>
-                    </div>
                 </div>
                 <div>
-                     <h4 class="text-2xl font-handwritten text-gray-800 mb-2">Форма обратной связи</h4>
-                     <form id="contact-form" class="space-y-4">
+                     <h4 class="text-2xl font-handwritten text-gray-800 mb-2">Напишите нам</h4>
+                     <form id="contact-form" class="space-y-4" onsubmit="submitOrder(event, 'contact-form', 'contact')">
                         <input name="name" type="text" placeholder="Ваше имя" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none">
-                        <input name="email" type="email" placeholder="Ваш Email или телефон" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none">
+                        <input name="email" type="text" placeholder="Ваш Email или телефон" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none">
                         <textarea name="message" rows="5" placeholder="Ваше сообщение" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none"></textarea>
-                        <button type="submit" class="w-full bg-sage-green text-white font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors">Отправить сообщение в Telegram</button>
+                        <button type="submit" class="w-full bg-sage-green text-white font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors">Отправить</button>
                     </form>
                 </div>
             </div>
@@ -490,33 +471,25 @@
 
     </main>
 
-    <!-- =========== ПОДВАЛ САЙТА =========== -->
     <footer class="bg-gray-800 text-white mt-16">
         <div class="container mx-auto px-6 py-8 text-center">
             <p class="font-handwritten text-2xl mb-2">Шалфей — творческая мастерская</p>
-            <div class="flex justify-center space-x-4 my-4 text-2xl">
-                <a href="https://vk.com/shalfeyart" target="_blank" class="text-gray-400 hover:text-white"><i class="fab fa-vk"></i></a>
-                <a href="https://t.me/shalfeyart" target="_blank" class="text-gray-400 hover:text-white"><i class="fab fa-telegram-plane"></i></a>
-                <a href="https://wa.me/79203226263" target="_blank" class="text-gray-400 hover:text-white"><i class="fab fa-whatsapp"></i></a>
-            </div>
-            <p class="text-gray-500 text-sm">&copy; 2024 Шалфей. Все права защищены.</p>
+            <p class="text-gray-500 text-sm">&copy; 2024 Шалфей.</p>
         </div>
     </footer>
     
-    <!-- Модальное окно для уведомлений -->
+    <!-- Notification Modal -->
     <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 opacity-0 invisible" onclick="this.classList.add('opacity-0', 'invisible')">
         <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm text-center" onclick="event.stopPropagation()">
-            <p id="notification-message" class="text-gray-700"></p>
-            <button class="mt-4 bg-sage-green text-white font-bold py-2 px-6 rounded-lg hover:bg-opacity-90" onclick="document.getElementById('notification-modal').classList.add('opacity-0', 'invisible')">Понятно</button>
+            <div class="mb-4 text-sage-green text-5xl"><i class="fas fa-check-circle"></i></div>
+            <p id="notification-message" class="text-gray-700 text-lg mb-4"></p>
+            <button class="bg-sage-green text-white font-bold py-2 px-6 rounded-lg hover:bg-opacity-90" onclick="document.getElementById('notification-modal').classList.add('opacity-0', 'invisible')">Отлично</button>
         </div>
     </div>
 
-
-    <!-- =========== СКРИПТЫ =========== -->
+    <!-- Scripts (Navigation and Animation) -->
     <script>
-        const TELEGRAM_USERNAME = 'Taniko_67';
-
-        // --- Логика для навигации по "страницам" ---
+        // Navigation Logic
         const pages = document.querySelectorAll('.page-section');
         const navLinks = document.querySelectorAll('.nav-link');
         const mobileMenu = document.getElementById('mobile-menu');
@@ -540,74 +513,31 @@
             runAnimations(activePage);
         }
 
-        // --- Логика для мобильного меню ---
         mobileMenuButton.addEventListener('click', () => {
             mobileMenu.classList.toggle('hidden');
             mobileMenuButton.classList.toggle('open');
         });
 
-        // --- Показываем главную страницу по умолчанию и управляем прелоадером ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const preloader = document.getElementById('preloader');
-            
-            setTimeout(() => {
-                preloader.classList.add('hidden');
-            }, 4000);
-
-            showPage('home');
-            initializeCardSliders(); // Инициализация всех слайдеров на странице
-        });
-        
-        // --- Модальное окно для уведомлений ---
         function showNotification(message) {
             document.getElementById('notification-message').textContent = message;
             const modal = document.getElementById('notification-modal');
             modal.classList.remove('opacity-0', 'invisible');
         }
 
-        // --- Редирект в Telegram с текстом ---
-        function redirectToTelegram(text) {
-            const encodedText = encodeURIComponent(text);
-            const url = `https://t.me/${TELEGRAM_USERNAME}?text=${encodedText}`;
-            window.open(url, '_blank');
-        }
-
-        // --- Обработка форм ---
-        document.getElementById('rental-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const form = e.target;
-            const message = `🛎️ Новая заявка на аренду костюма:\n\n👤 Имя: ${form.elements.name.value}\n📞 Телефон: ${form.elements.phone.value}\n👘 Костюм: ${form.elements.costume.value}\n🗓 Даты: ${form.elements.dates.value}`;
-            redirectToTelegram(message);
-            form.reset();
-        });
-        
-        document.getElementById('contact-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const form = e.target;
-            const message = `📝 Новое сообщение с сайта:\n\n👤 Имя: ${form.elements.name.value}\n📧 Контакт: ${form.elements.email.value}\n\n💬 Сообщение:\n${form.elements.message.value}`;
-            redirectToTelegram(message);
-            form.reset();
-        });
-        
-        function signUpViaTelegram(message) {
-            redirectToTelegram(message);
-        }
-
-        // --- Логика для анимации при прокрутке ---
-        const observer = new IntersectionObserver((entries, observerInstance) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const el = entry.target;
-                    const delay = el.dataset.delay || 0;
-                    setTimeout(() => {
-                        el.classList.add('is-visible');
-                    }, delay);
-                    observerInstance.unobserve(el);
-                }
-            });
-        }, { threshold: 0.1 });
-
+        // Animation Logic
         function runAnimations(container) {
+            const observer = new IntersectionObserver((entries, observerInstance) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const el = entry.target;
+                        setTimeout(() => {
+                            el.classList.add('is-visible');
+                        }, el.dataset.delay || 0);
+                        observerInstance.unobserve(el);
+                    }
+                });
+            }, { threshold: 0.1 });
+
             const animatedElements = container.querySelectorAll('[data-animate]');
             animatedElements.forEach(el => {
                 el.classList.remove('is-visible');
@@ -615,20 +545,35 @@
             });
         }
         
-        // --- НОВЫЙ СКРИПТ: Логика для индивидуальных слайдеров в карточках ---
+        // Slider Logic (Fixed to handle dynamic content)
         function initializeCardSliders() {
-            const sliderContainers = document.querySelectorAll('[data-slider-id]');
+            const sliderContainers = document.querySelectorAll('.card-slider-container');
 
             sliderContainers.forEach(container => {
+                // Check if already initialized to avoid duplicate listeners
+                if(container.dataset.initialized) return;
+                
                 const slides = container.querySelectorAll('.slide');
                 const prevBtn = container.querySelector('.slider-prev');
                 const nextBtn = container.querySelector('.slider-next');
-                // Ищем контейнер с точками внутри родительской карточки
-                const dotsContainer = container.parentElement.querySelector('.dots-container');
-                if (!slides.length || !dotsContainer) return;
-                
-                const dots = dotsContainer.querySelectorAll('.dot');
+                const dotsContainer = container.parentElement.parentElement.querySelector('.dots-container'); // Adjusted for deeper nesting if needed or find loosely
+
+                // If only 1 slide, hide buttons
+                if (slides.length <= 1) {
+                    if(prevBtn) prevBtn.style.display = 'none';
+                    if(nextBtn) nextBtn.style.display = 'none';
+                    return;
+                }
+
+                container.dataset.initialized = "true";
                 let currentSlide = 0;
+                let dots = null;
+
+                // Try to find dots in the parent card
+                const card = container.closest('.bg-white');
+                if(card) {
+                    dots = card.querySelectorAll('.dot');
+                }
 
                 function showSlide(n) {
                     if (n >= slides.length) currentSlide = 0;
@@ -636,34 +581,29 @@
                     else currentSlide = n;
 
                     slides.forEach(slide => slide.classList.remove('active'));
-                    dots.forEach(dot => dot.classList.remove('active'));
+                    if(dots) dots.forEach(dot => dot.classList.remove('active'));
 
                     if (slides[currentSlide]) slides[currentSlide].classList.add('active');
-                    if (dots[currentSlide]) dots[currentSlide].classList.add('active');
+                    if (dots && dots[currentSlide]) dots[currentSlide].classList.add('active');
                 }
 
-                prevBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    showSlide(currentSlide - 1);
-                });
+                if(prevBtn) prevBtn.addEventListener('click', (e) => { e.stopPropagation(); showSlide(currentSlide - 1); });
+                if(nextBtn) nextBtn.addEventListener('click', (e) => { e.stopPropagation(); showSlide(currentSlide + 1); });
 
-                nextBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    showSlide(currentSlide + 1);
-                });
-
-                dots.forEach((dot, index) => {
-                    dot.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        showSlide(index);
+                if(dots) {
+                    dots.forEach((dot, index) => {
+                        dot.addEventListener('click', (e) => { e.stopPropagation(); showSlide(index); });
                     });
-                });
-
-                showSlide(0);
+                }
             });
         }
 
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            const preloader = document.getElementById('preloader');
+            setTimeout(() => { preloader.classList.add('hidden'); }, 3000);
+            showPage('home');
+        });
     </script>
-
 </body>
 </html>
