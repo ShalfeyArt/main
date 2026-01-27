@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Шалфей — Творческая мастерская</title>
     <link rel="icon" href="https://raw.githubusercontent.com/ShalfeyArt/main/refs/heads/main/shalfey.ico" type="image/x-icon">
     
@@ -18,8 +18,8 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, getDoc, doc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, getDoc, doc, query, where, orderBy, setDoc, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA8roOb63vM_ZaBt11x8B1b132gQBiG29A",
@@ -34,54 +34,166 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
 
-        // Инициализация
-        signInAnonymously(auth).then(() => {
-            console.log("Firebase Connected");
-            loadContent(); 
-            loadMyOrders(); 
-        }).catch((error) => console.error("Auth Error", error));
+        let currentUser = null;
+
+        // --- AUTH ---
+        window.googleLogin = () => {
+            signInWithPopup(auth, provider)
+                .then(result => showNotification(`Добро пожаловать, ${result.user.displayName}!`))
+                .catch(error => console.error(error));
+        };
+
+        window.googleLogout = () => {
+            signOut(auth).then(() => showNotification("Вы вышли из системы"));
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            updateAuthUI(user);
+            if(user) {
+                checkReviewPermission(user);
+                loadMyOrders(user.uid);
+            } else {
+                document.getElementById('my-orders-list').innerHTML = '<div class="text-center p-6 text-gray-500">Войдите через Google, чтобы видеть свои заказы.</div>';
+                document.getElementById('leave-review-section').classList.add('hidden');
+            }
+        });
+
+        function updateAuthUI(user) {
+            const container = document.getElementById('auth-container');
+            if (user) {
+                container.innerHTML = `
+                    <div class="flex items-center gap-3 bg-white/40 p-1 pr-4 rounded-full border border-white/50 backdrop-blur-sm">
+                        <img src="${user.photoURL}" class="w-8 h-8 rounded-full border border-white">
+                        <span class="text-xs font-bold text-gray-700 hidden md:block">${user.displayName.split(' ')[0]}</span>
+                        <button onclick="window.googleLogout()" class="text-xs text-red-500 hover:text-red-700"><i class="fas fa-sign-out-alt"></i></button>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <button onclick="window.googleLogin()" class="flex items-center gap-2 bg-white text-gray-700 px-4 py-2 rounded-full shadow-sm hover:shadow-md transition text-xs font-bold border border-gray-100">
+                        <i class="fab fa-google text-red-500"></i> <span class="hidden sm:inline">Войти</span>
+                    </button>
+                `;
+            }
+        }
+
+        // Инициализация данных
+        loadContent();
+        loadAboutUs();
+        loadReviews();
 
         // 1. ЗАГРУЗКА ТОВАРОВ
         async function loadContent() {
             const sections = ['rentals', 'workshops', 'handmade'];
-            
             for (const section of sections) {
                 const container = document.getElementById(`${section}-container`);
                 if (!container) continue;
-
                 container.innerHTML = '<div class="col-span-full text-center py-10"><i class="fas fa-spinner fa-spin text-3xl text-white"></i></div>';
 
                 try {
                     const q = query(collection(db, "products"), where("category", "==", section));
                     const querySnapshot = await getDocs(q);
-                    
                     container.innerHTML = ''; 
-
                     if (querySnapshot.empty) {
-                        container.innerHTML = '<div class="col-span-full text-center text-white/70 italic py-10">В этом разделе пока пусто...</div>';
+                        container.innerHTML = '<div class="col-span-full text-center text-white/70 italic py-10">Пусто...</div>';
                         continue;
                     }
-
                     querySnapshot.forEach((doc) => {
-                        const data = doc.data();
-                        const cardHTML = createCardHTML(data, section);
-                        container.insertAdjacentHTML('beforeend', cardHTML);
+                        container.insertAdjacentHTML('beforeend', createCardHTML(doc.data(), section));
                     });
-
-                    setTimeout(() => {
-                        initializeCardSliders();
-                        runAnimations(container);
-                    }, 100);
-
-                } catch (error) {
-                    console.error(`Error loading ${section}:`, error);
-                    container.innerHTML = '<div class="col-span-full text-center text-red-200">Ошибка загрузки данных.</div>';
-                }
+                    setTimeout(() => { initializeCardSliders(); runAnimations(container); }, 100);
+                } catch (error) { console.error(error); }
             }
         }
 
-        // 2. ОТПРАВКА ЗАКАЗА (Через Модалку)
+        // 2. ДИНАМИЧЕСКИЙ "О НАС"
+        async function loadAboutUs() {
+            try {
+                const docSnap = await getDoc(doc(db, "content", "about_us"));
+                if (docSnap.exists() && docSnap.data().text) {
+                    document.getElementById('about-us-text').innerText = `"${docSnap.data().text}"`;
+                }
+            } catch (e) { console.error("Error loading about us", e); }
+        }
+
+        // 3. ОТЗЫВЫ (РЕАЛЬНЫЕ)
+        async function loadReviews() {
+            const container = document.getElementById('reviews-grid');
+            try {
+                const q = query(collection(db, "reviews"), orderBy("createdAt", "desc"), limit(6));
+                const snap = await getDocs(q);
+                
+                if (snap.empty) {
+                    container.innerHTML = '<div class="col-span-full text-center text-gray-500">Пока нет отзывов. Станьте первым!</div>';
+                    return;
+                }
+                
+                let html = '';
+                snap.forEach(d => {
+                    const r = d.data();
+                    const stars = Array(5).fill(0).map((_, i) => i < r.rating ? '<i class="fas fa-star text-yellow-400 text-xs"></i>' : '<i class="far fa-star text-gray-300 text-xs"></i>').join('');
+                    html += `
+                        <div class="glass p-6 rounded-2xl flex flex-col gap-3 min-w-[280px] md:min-w-[320px] snap-center">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-sage-green/20 flex items-center justify-center text-sage-dark font-bold overflow-hidden">
+                                    ${r.photoURL ? `<img src="${r.photoURL}" class="w-full h-full object-cover">` : r.authorName[0]}
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800 text-sm">${r.authorName}</h4>
+                                    <div class="flex gap-0.5">${stars}</div>
+                                </div>
+                            </div>
+                            <p class="text-gray-600 text-sm italic leading-relaxed">"${r.text}"</p>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } catch (e) { console.error(e); }
+        }
+
+        // Проверка права на отзыв
+        async function checkReviewPermission(user) {
+            // Ищем завершенные заказы этого пользователя
+            const q = query(collection(db, "orders"), where("userId", "==", user.uid), where("status", "==", "done"));
+            const snap = await getDocs(q);
+
+            if (!snap.empty) {
+                // Если есть завершенные заказы, показываем форму
+                document.getElementById('leave-review-section').classList.remove('hidden');
+            }
+        }
+
+        window.submitReview = async (e) => {
+            e.preventDefault();
+            if(!currentUser) return;
+            
+            const form = e.target;
+            const text = form.text.value;
+            const rating = parseInt(form.rating.value);
+
+            try {
+                await addDoc(collection(db, "reviews"), {
+                    userId: currentUser.uid,
+                    authorName: currentUser.displayName,
+                    photoURL: currentUser.photoURL,
+                    text: text,
+                    rating: rating,
+                    createdAt: new Date().toISOString()
+                });
+                showNotification("Спасибо за ваш отзыв!");
+                form.reset();
+                document.getElementById('leave-review-section').classList.add('hidden'); // Скрываем после отправки
+                loadReviews();
+            } catch(e) {
+                console.error(e);
+                showNotification("Ошибка при отправке.");
+            }
+        }
+
+        // 4. ЗАКАЗЫ
         window.openOrderModal = (title, type) => {
             const modal = document.getElementById('order-modal');
             const form = document.getElementById('modal-order-form');
@@ -89,7 +201,7 @@
             const modalTitle = document.getElementById('modal-product-title');
 
             modalTitle.innerText = title || 'Оформление заявки';
-            titleInput.value = `${type}: ${title}`;
+            titleInput.value = `${type}: ${title}`; // Автозаполнение
             
             modal.classList.remove('hidden');
             setTimeout(() => {
@@ -113,95 +225,75 @@
             
             data.status = 'new';
             data.createdAt = new Date().toISOString();
-            data.adminReply = "";
+            data.userId = currentUser ? currentUser.uid : 'anonymous'; // Привязываем к пользователю
+            
+            // Если пользователь авторизован, берем его данные
+            if(currentUser && !data.name) data.name = currentUser.displayName;
 
             const btn = form.querySelector('button[type="submit"]');
-            const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             btn.disabled = true;
 
             try {
-                const docRef = await addDoc(collection(db, "orders"), data);
-                saveOrderLocally(docRef.id);
-                showNotification("Заявка отправлена! Мы скоро свяжемся с вами.");
+                await addDoc(collection(db, "orders"), data);
+                showNotification("Заявка отправлена!");
                 form.reset();
                 closeOrderModal();
-                loadMyOrders(); 
+                if(currentUser) loadMyOrders(currentUser.uid);
             } catch (e) {
                 console.error("Ошибка: ", e);
-                showNotification("Ошибка при отправке. Попробуйте позже.");
+                showNotification("Ошибка. Попробуйте позже.");
             } finally {
-                btn.innerHTML = originalText;
+                btn.innerHTML = 'Отправить заявку';
                 btn.disabled = false;
             }
         };
 
-        // Сохранение и загрузка локальных заявок
-        function saveOrderLocally(orderId) {
-            let myOrders = JSON.parse(localStorage.getItem('shalfey_orders') || '[]');
-            myOrders.push(orderId);
-            localStorage.setItem('shalfey_orders', JSON.stringify(myOrders));
-        }
-
-        window.loadMyOrders = async () => {
+        async function loadMyOrders(uid) {
             const container = document.getElementById('my-orders-list');
             if(!container) return;
-
-            const myOrdersIds = JSON.parse(localStorage.getItem('shalfey_orders') || '[]');
             
-            if (myOrdersIds.length === 0) {
-                container.innerHTML = '<div class="glass p-6 rounded-2xl text-center text-gray-600">Вы еще не оставляли заявок с этого устройства.</div>';
-                return;
-            }
-
-            container.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-white"></i></div>';
+            // Загружаем заказы из БД (только для этого пользователя)
+            const q = query(collection(db, "orders"), where("userId", "==", uid), orderBy("createdAt", "desc"));
             
-            let html = '';
-            for (let i = myOrdersIds.length - 1; i >= 0; i--) {
-                const id = myOrdersIds[i];
-                try {
-                    const docSnap = await getDoc(doc(db, "orders", id));
-                    if (docSnap.exists()) {
-                        const order = docSnap.data();
-                        const date = new Date(order.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
-                        
-                        let statusBadge = 'bg-yellow-100/80 text-yellow-800';
-                        let statusText = 'В обработке';
-                        
-                        if (order.status === 'answered') {
-                            statusBadge = 'bg-blue-100/80 text-blue-800 font-bold';
-                            statusText = 'Есть ответ!';
-                        } else if (order.status === 'done') {
-                            statusBadge = 'bg-green-100/80 text-green-800';
-                            statusText = 'Завершено';
-                        }
-
-                        html += `
-                        <div class="glass p-6 rounded-2xl mb-4 transition hover:bg-white/40 animate-fade-in border border-white/40">
-                            <div class="flex flex-wrap justify-between items-start gap-2 mb-3">
-                                <h4 class="font-bold text-xl text-gray-800">${order.costume || 'Сообщение'}</h4>
-                                <span class="${statusBadge} text-xs px-3 py-1 rounded-full uppercase tracking-wider shadow-sm backdrop-blur-sm">${statusText}</span>
-                            </div>
-                            <div class="text-sm text-gray-500 mb-4 flex items-center gap-2">
-                                <i class="far fa-clock"></i> ${date}
-                            </div>
-                            
-                            ${order.adminReply ? `
-                                <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 relative mt-2 backdrop-blur-sm">
-                                    <div class="text-xs font-bold text-blue-600 mb-1">Ответ Шалфея:</div>
-                                    <p class="text-gray-800">${order.adminReply}</p>
-                                </div>
-                            ` : ''}
-                        </div>`;
-                    }
-                } catch (e) {
-                    console.error("Err loading order", id);
+            try {
+                const snap = await getDocs(q);
+                if (snap.empty) {
+                    container.innerHTML = '<div class="glass p-6 rounded-2xl text-center text-gray-600">У вас пока нет активных заявок.</div>';
+                    return;
                 }
-            }
-            container.innerHTML = html || '<div class="text-center text-gray-500">История пуста</div>';
-        };
+                
+                let html = '';
+                snap.forEach(d => {
+                    const order = d.data();
+                    const date = new Date(order.createdAt).toLocaleDateString('ru-RU');
+                    
+                    let statusBadge = 'bg-yellow-100/80 text-yellow-800';
+                    let statusText = 'В обработке';
+                    
+                    if (order.status === 'answered') {
+                        statusBadge = 'bg-blue-100/80 text-blue-800 font-bold';
+                        statusText = 'Есть ответ!';
+                    } else if (order.status === 'done') {
+                        statusBadge = 'bg-green-100/80 text-green-800';
+                        statusText = 'Завершено';
+                    }
 
-        // --- КАРТОЧКИ ---
+                    html += `
+                    <div class="glass p-4 rounded-2xl mb-3 border border-white/40">
+                        <div class="flex justify-between items-start gap-2 mb-2">
+                            <h4 class="font-bold text-gray-800 text-sm">${order.costume}</h4>
+                            <span class="${statusBadge} text-[10px] px-2 py-1 rounded-full uppercase font-bold">${statusText}</span>
+                        </div>
+                        <div class="text-xs text-gray-500 mb-2 flex items-center gap-2"><i class="far fa-clock"></i> ${date}</div>
+                        ${order.adminReply ? `<div class="bg-blue-50/50 p-3 rounded-xl border border-blue-100 mt-2 text-xs text-gray-700"><b>Ответ:</b> ${order.adminReply}</div>` : ''}
+                    </div>`;
+                });
+                container.innerHTML = html;
+            } catch (e) { console.error(e); }
+        }
+
+        // --- UI UTILS ---
         function createCardHTML(item, type) {
             let images = Array.isArray(item.images) ? item.images : [item.images || ''];
             if(images.length === 0 || !images[0]) images = ['https://via.placeholder.com/400x500?text=No+Image'];
@@ -218,44 +310,23 @@
             let btnText = 'Заказать';
             let btnAction = `window.openOrderModal('${item.title}', 'Изделие')`;
             
-            if (type === 'rentals') { btnText = 'Забронировать'; btnAction = `window.openOrderModal('${item.title}', 'Аренда')`; }
-            else if (type === 'workshops') { btnText = 'Записаться'; btnAction = `window.openOrderModal('${item.title}', 'МК')`; }
+            if (type === 'rentals') { btnText = 'Бронь'; btnAction = `window.openOrderModal('${item.title}', 'Аренда')`; }
+            else if (type === 'workshops') { btnText = 'Запись'; btnAction = `window.openOrderModal('${item.title}', 'МК')`; }
             
-            const price = `<p class="text-xl font-bold text-sage-dark mt-2">${item.price}</p>`;
-
-            // Дизайн для МК (горизонтальный)
-            if(type === 'workshops') {
-                 return `
-                <div data-animate="fade-up" class="glass group flex flex-col md:flex-row gap-8 p-6 md:p-8 rounded-3xl mb-8 border border-white/40 hover:shadow-2xl transition-all duration-300">
-                    <div class="w-full md:w-1/3 h-64 relative rounded-2xl overflow-hidden card-slider-container shadow-inner">
-                        ${slidesHTML} ${navHTML}
-                    </div>
-                    <div class="flex-1 flex flex-col justify-center">
-                        <h3 class="text-3xl font-handwritten font-bold text-gray-800 mb-2">${item.title}</h3>
-                        <p class="text-gray-600 mb-4 leading-relaxed">${item.description}</p>
-                        ${price}
-                        <div class="mt-4">
-                            <button onclick="${btnAction}" class="glass-btn px-8 py-3 rounded-xl font-bold text-gray-700 hover:text-sage-dark transition shadow-lg">${btnText}</button>
-                        </div>
-                    </div>
-                </div>`;
-            }
-
-            // Вертикальная карточка
             return `
             <div data-animate="zoom-in" class="glass rounded-3xl overflow-hidden flex flex-col h-full group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-white/40">
-                <div class="h-80 relative card-slider-container overflow-hidden">
+                <div class="h-64 sm:h-80 relative card-slider-container overflow-hidden">
                     ${slidesHTML} ${navHTML}
                     <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
                 </div>
-                <div class="p-6 flex flex-col flex-grow relative">
+                <div class="p-5 flex flex-col flex-grow relative">
                     <div class="absolute top-0 left-0 w-full h-full bg-white/40 backdrop-blur-3xl -z-10"></div>
-                    <h4 class="text-2xl font-handwritten font-bold text-gray-800 mb-2 leading-tight">${item.title}</h4>
-                    <p class="text-gray-600 text-sm mb-4 flex-grow line-clamp-4 font-light">${item.description}</p>
-                    <div class="mt-auto pt-4 border-t border-gray-200/50 flex items-center justify-between">
-                        ${price}
-                        <button onclick="${btnAction}" class="glass-btn-sm px-4 py-2 rounded-lg text-sm font-bold text-gray-700 hover:text-sage-dark transition">${btnText}</button>
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="text-xl font-handwritten font-bold text-gray-800 leading-tight pr-2">${item.title}</h4>
+                        <span class="text-sm font-bold text-sage-dark whitespace-nowrap bg-white/50 px-2 py-1 rounded-lg">${item.price}</span>
                     </div>
+                    <p class="text-gray-600 text-xs mb-4 flex-grow line-clamp-3 font-light leading-relaxed">${item.description}</p>
+                    <button onclick="${btnAction}" class="w-full glass-btn-sm py-3 rounded-xl text-sm font-bold text-gray-700 hover:text-white hover:bg-sage-green transition shadow-sm">${btnText}</button>
                 </div>
             </div>`;
         }
@@ -288,31 +359,18 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.6);
         }
 
-        .glass-btn {
-            background: rgba(255, 255, 255, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(4px);
-        }
-        .glass-btn:hover {
-            background: rgba(255, 255, 255, 0.85);
-            transform: translateY(-1px);
-        }
-        
         .glass-btn-sm {
             background: rgba(255, 255, 255, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
-        .glass-btn-sm:hover { background: rgba(255, 255, 255, 0.9); }
 
         .glass-input {
             background: rgba(255, 255, 255, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(4px);
         }
-        .glass-input:focus {
-            background: rgba(255, 255, 255, 0.8);
-            border-color: #8A9A5B;
-        }
+        .glass-input:focus { background: rgba(255, 255, 255, 0.8); border-color: #8A9A5B; }
+        .glass-input[readonly] { background: rgba(0,0,0,0.05); color: #666; cursor: not-allowed; }
 
         /* Typography & Colors */
         h1, h2, h3, h4, .font-handwritten { font-family: 'Caveat', cursive; }
@@ -320,21 +378,52 @@
         .text-sage-dark { color: #5F6F3A; }
         .bg-sage-green { background-color: #8A9A5B; }
         
-        /* Navigation */
-        .nav-link.active { color: #5F6F3A; font-weight: 700; background: rgba(255,255,255,0.4); border-radius: 12px; }
+        /* Desktop Navigation (Dock Style) */
+        .dock-icon {
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .dock-icon:hover { transform: translateY(-5px) scale(1.1); color: #5F6F3A; }
+        .dock-icon.active { color: #5F6F3A; }
+        .dock-icon.active::after {
+            content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+            width: 4px; height: 4px; background: #5F6F3A; border-radius: 50%;
+        }
+        .dock-tooltip {
+            position: absolute; top: 100%; left: 50%; transform: translateX(-50%) translateY(10px);
+            background: rgba(0,0,0,0.8); color: white; padding: 4px 8px; border-radius: 6px;
+            font-size: 10px; opacity: 0; pointer-events: none; transition: 0.2s; white-space: nowrap; margin-top: 5px;
+        }
+        .dock-icon:hover .dock-tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* Burger Menu Animation */
+        .burger-line { transition: 0.3s; transform-origin: center; }
+        .burger-open .line-1 { transform: translateY(7px) rotate(45deg); }
+        .burger-open .line-2 { opacity: 0; }
+        .burger-open .line-3 { transform: translateY(-7px) rotate(-45deg); }
         
-        .page-section { display: none; animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+        /* Mobile Menu */
+        #mobile-menu {
+            transform: translateY(-100%);
+            transition: transform 0.5s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        #mobile-menu.open { transform: translateY(0); }
+        .mobile-link { opacity: 0; transform: translateY(20px); transition: 0.4s; }
+        #mobile-menu.open .mobile-link { opacity: 1; transform: translateY(0); }
+        
+        /* Utilities */
+        .page-section { display: none; animation: fadeIn 0.6s ease-out; }
         .page-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Sliders */
-        .card-slider-container .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.5s ease-in-out; z-index: 1; }
-        .card-slider-container .slide.active { opacity: 1; z-index: 2; }
+        .card-slider-container .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.5s ease-in-out; }
+        .card-slider-container .slide.active { opacity: 1; }
         
         /* Scroll Animation */
         [data-animate] { opacity: 0; transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
         .is-visible { opacity: 1; transform: none !important; }
-        [data-animate="fade-up"] { transform: translateY(40px); }
+        [data-animate="fade-up"] { transform: translateY(30px); }
         [data-animate="zoom-in"] { transform: scale(0.95); }
 
         /* Preloader */
@@ -342,287 +431,273 @@
         #preloader.hidden { opacity: 0; visibility: hidden; }
         #preloader-logo .sage-path { stroke-dasharray: 1500; stroke-dashoffset: 1500; animation: draw 3s ease-in-out forwards; }
         @keyframes draw { to { stroke-dashoffset: 0; } }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="antialiased selection:bg-sage-green selection:text-white">
+<body class="antialiased selection:bg-sage-green selection:text-white pb-20 md:pb-0">
 
     <!-- Preloader -->
     <div id="preloader">
-        <svg id="preloader-logo" width="150" height="150" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <path class="sage-path" d="M100 180 V 50 M100 130 C75 125 75 155 100 150 M100 130 C125 125 125 155 100 150 M100 100 C80 95 80 120 100 115 M100 100 C120 95 120 120 100 115 M100 75 C90 70 90 90 100 85 M100 75 C110 70 110 90 100 85 M80 160 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 M120,165 a4,4 0 1,0 -8,0 a4,4 0 1,0 8,0 M75 90 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" fill="none" stroke="#8A9A5B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <svg id="preloader-logo" width="120" height="120" viewBox="0 0 200 200">
+            <path class="sage-path" d="M100 180 V 50 M100 130 C75 125 75 155 100 150 M100 130 C125 125 125 155 100 150 M100 100 C80 95 80 120 100 115 M100 100 C120 95 120 120 100 115 M100 75 C90 70 90 90 100 85 M100 75 C110 70 110 90 100 85" fill="none" stroke="#8A9A5B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
     </div>
 
     <!-- Header -->
-    <header class="glass-dark shadow-sm sticky top-0 z-50">
-        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
-            <a href="#" class="flex items-center gap-3 group" onclick="showPage('home')">
-                <div class="h-10 w-10 rounded-full bg-white flex items-center justify-center shadow-md overflow-hidden border border-white/50 group-hover:scale-110 transition duration-300">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/2499.jpg" alt="Логотип" class="h-full w-full object-cover">
+    <header class="fixed top-0 w-full z-50 glass-dark transition-all duration-300">
+        <div class="container mx-auto px-4 py-2 flex justify-between items-center h-16">
+            <!-- Logo -->
+            <a href="#" class="flex items-center gap-2 group z-50 relative" onclick="showPage('home')">
+                <div class="h-9 w-9 rounded-full bg-white flex items-center justify-center shadow-md overflow-hidden border border-white/50">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/2499.jpg" class="h-full w-full object-cover">
                 </div>
-                <span class="text-3xl font-handwritten text-sage-green font-bold drop-shadow-sm">Шалфей</span>
+                <span class="text-2xl font-handwritten text-sage-green font-bold">Шалфей</span>
             </a>
             
-            <nav class="hidden lg:flex items-center p-1 bg-white/30 backdrop-blur-md rounded-2xl border border-white/20">
-                <a href="#" class="nav-link px-5 py-2 text-gray-700 hover:text-sage-green transition rounded-xl" onclick="showPage('home')">Главная</a>
-                <a href="#" class="nav-link px-5 py-2 text-gray-700 hover:text-sage-green transition rounded-xl" onclick="showPage('rentals')">Аренда</a>
-                <a href="#" class="nav-link px-5 py-2 text-gray-700 hover:text-sage-green transition rounded-xl" onclick="showPage('workshops')">МК</a>
-                <a href="#" class="nav-link px-5 py-2 text-gray-700 hover:text-sage-green transition rounded-xl" onclick="showPage('handmade')">Изделия</a>
-                <a href="#" class="nav-link px-5 py-2 text-gray-700 hover:text-sage-green transition rounded-xl" onclick="showPage('contacts')">Контакты</a>
+            <!-- Desktop Nav (Dock) -->
+            <nav class="hidden lg:flex items-center gap-8 px-8 py-3 bg-white/60 backdrop-blur-xl rounded-full border border-white/40 shadow-sm absolute left-1/2 -translate-x-1/2">
+                <button class="dock-icon text-gray-500 hover:text-sage-green active" onclick="showPage('home')">
+                    <i class="fas fa-home text-xl"></i>
+                    <span class="dock-tooltip">Главная</span>
+                </button>
+                <button class="dock-icon text-gray-500 hover:text-sage-green" onclick="showPage('rentals')">
+                    <i class="fas fa-tshirt text-xl"></i>
+                    <span class="dock-tooltip">Аренда</span>
+                </button>
+                <button class="dock-icon text-gray-500 hover:text-sage-green" onclick="showPage('workshops')">
+                    <i class="fas fa-paint-brush text-xl"></i>
+                    <span class="dock-tooltip">Мастер-классы</span>
+                </button>
+                <button class="dock-icon text-gray-500 hover:text-sage-green" onclick="showPage('handmade')">
+                    <i class="fas fa-gem text-xl"></i>
+                    <span class="dock-tooltip">Изделия</span>
+                </button>
+                <button class="dock-icon text-gray-500 hover:text-sage-green" onclick="showPage('my-orders')">
+                    <i class="fas fa-heart text-xl"></i>
+                    <span class="dock-tooltip">Мое</span>
+                </button>
+                <button class="dock-icon text-gray-500 hover:text-sage-green" onclick="showPage('contacts')">
+                    <i class="fas fa-envelope text-xl"></i>
+                    <span class="dock-tooltip">Контакты</span>
+                </button>
             </nav>
 
-            <div class="flex items-center gap-4">
-                <button onclick="showPage('my-orders')" class="hidden lg:flex bg-gradient-to-r from-[#8A9A5B] to-[#74824b] text-white px-5 py-2 rounded-xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition shadow-md shadow-green-100/50 items-center gap-2">
-                    <i class="fas fa-heart"></i> <span class="text-sm">Мои заявки</span>
-                </button>
-                <button id="mobile-menu-btn" class="lg:hidden text-gray-700 glass p-2 rounded-lg">
-                    <i class="fas fa-bars text-xl"></i>
+            <!-- Auth & Burger -->
+            <div class="flex items-center gap-3 z-50 relative">
+                <div id="auth-container">
+                    <!-- Кнопка входа инжектится через JS -->
+                </div>
+                
+                <button id="burger-btn" class="lg:hidden w-10 h-10 flex flex-col justify-center items-center gap-1.5 focus:outline-none">
+                    <span class="burger-line line-1 w-6 h-0.5 bg-gray-700 rounded-full"></span>
+                    <span class="burger-line line-2 w-6 h-0.5 bg-gray-700 rounded-full"></span>
+                    <span class="burger-line line-3 w-6 h-0.5 bg-gray-700 rounded-full"></span>
                 </button>
             </div>
         </div>
 
-        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden lg:hidden glass absolute w-full left-0 top-full shadow-xl border-t border-white/40 backdrop-blur-xl">
-            <div class="flex flex-col p-4 space-y-2">
-                <a href="#" class="block py-3 px-4 rounded-xl hover:bg-white/50" onclick="showPage('home')">Главная</a>
-                <a href="#" class="block py-3 px-4 rounded-xl hover:bg-white/50" onclick="showPage('rentals')">Аренда</a>
-                <a href="#" class="block py-3 px-4 rounded-xl hover:bg-white/50" onclick="showPage('workshops')">Мастер-классы</a>
-                <a href="#" class="block py-3 px-4 rounded-xl hover:bg-white/50" onclick="showPage('handmade')">Изделия</a>
-                <a href="#" class="block py-3 px-4 rounded-xl hover:bg-white/50" onclick="showPage('contacts')">Контакты</a>
-                <a href="#" class="block py-3 px-4 rounded-xl bg-sage-green/10 text-sage-dark font-bold mt-2" onclick="showPage('my-orders')"><i class="fas fa-inbox mr-2"></i>Мои заявки</a>
-            </div>
+        <!-- Mobile Fullscreen Menu -->
+        <div id="mobile-menu" class="fixed inset-0 bg-white/95 backdrop-blur-xl z-40 flex flex-col items-center justify-center space-y-6 pt-16 lg:hidden">
+            <a href="#" class="mobile-link text-3xl font-handwritten text-gray-800 hover:text-sage-green" onclick="showPage('home'); toggleMenu()">Главная</a>
+            <a href="#" class="mobile-link text-3xl font-handwritten text-gray-800 hover:text-sage-green" onclick="showPage('rentals'); toggleMenu()">Аренда</a>
+            <a href="#" class="mobile-link text-3xl font-handwritten text-gray-800 hover:text-sage-green" onclick="showPage('workshops'); toggleMenu()">Мастер-классы</a>
+            <a href="#" class="mobile-link text-3xl font-handwritten text-gray-800 hover:text-sage-green" onclick="showPage('handmade'); toggleMenu()">Изделия</a>
+            <a href="#" class="mobile-link text-3xl font-handwritten text-gray-800 hover:text-sage-green" onclick="showPage('my-orders'); toggleMenu()">Мои заказы</a>
+            <a href="#" class="mobile-link text-3xl font-handwritten text-gray-800 hover:text-sage-green" onclick="showPage('contacts'); toggleMenu()">Контакты</a>
         </div>
     </header>
 
-    <main class="container mx-auto px-4 py-8 md:py-12 min-h-[80vh]">
+    <main class="container mx-auto px-4 py-20 min-h-screen">
 
         <!-- Home -->
         <section id="home" class="page-section active">
-            <div class="text-center mb-16 animate-fade-in relative">
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-green-200/30 rounded-full blur-3xl -z-10"></div>
-                <h1 class="text-6xl md:text-8xl font-bold text-gray-800 mb-6 font-handwritten drop-shadow-sm"><span class="text-sage-green">Место,</span> где живет душа</h1>
-                <p class="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto leading-relaxed font-light">Костюмы для историй, мастер-классы для рук и изделия для сердца.</p>
+            <div class="text-center mb-12 animate-fade-in pt-10">
+                <h1 class="text-5xl md:text-7xl font-bold text-gray-800 mb-4 font-handwritten drop-shadow-sm"><span class="text-sage-green">Душа</span> в деталях</h1>
+                <p class="text-lg text-gray-600 max-w-xl mx-auto leading-relaxed font-light">Уютная мастерская, где создаются истории.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 px-2">
-                <div onclick="showPage('rentals')" class="cursor-pointer group relative h-96 rounded-3xl overflow-hidden shadow-xl border-4 border-white transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/kostum%20krasny%20plasch%20eshe%20photo.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-1000">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end justify-center p-8">
-                        <h3 class="text-white text-5xl font-handwritten font-bold drop-shadow-md group-hover:text-sage-green transition-colors">Аренда</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-16">
+                <div onclick="showPage('rentals')" class="h-64 rounded-3xl bg-[url('https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/kostum%20krasny%20plasch%20eshe%20photo.jpg')] bg-cover bg-center relative group overflow-hidden cursor-pointer shadow-lg">
+                    <div class="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition flex items-center justify-center">
+                        <span class="text-white font-handwritten text-4xl font-bold">Аренда</span>
                     </div>
                 </div>
-                <div onclick="showPage('workshops')" class="cursor-pointer group relative h-96 rounded-3xl overflow-hidden shadow-xl border-4 border-white transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-1000">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end justify-center p-8">
-                        <h3 class="text-white text-5xl font-handwritten font-bold drop-shadow-md group-hover:text-sage-green transition-colors">МК</h3>
+                <div onclick="showPage('workshops')" class="h-64 rounded-3xl bg-[url('https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg')] bg-cover bg-center relative group overflow-hidden cursor-pointer shadow-lg">
+                    <div class="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition flex items-center justify-center">
+                        <span class="text-white font-handwritten text-4xl font-bold">МК</span>
                     </div>
                 </div>
-                <div onclick="showPage('handmade')" class="cursor-pointer group relative h-96 rounded-3xl overflow-hidden shadow-xl border-4 border-white transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kluchnitsa%20dlya%20kluchey%20vvide%20domikov.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-1000">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end justify-center p-8">
-                        <h3 class="text-white text-5xl font-handwritten font-bold drop-shadow-md group-hover:text-sage-green transition-colors">Изделия</h3>
+                <div onclick="showPage('handmade')" class="h-64 rounded-3xl bg-[url('https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kluchnitsa%20dlya%20kluchey%20vvide%20domikov.jpg')] bg-cover bg-center relative group overflow-hidden cursor-pointer shadow-lg">
+                    <div class="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition flex items-center justify-center">
+                        <span class="text-white font-handwritten text-4xl font-bold">Изделия</span>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-24 glass p-10 md:p-14 rounded-[3rem] text-center shadow-lg relative overflow-hidden" data-animate="fade-up">
-                 <div class="absolute top-0 right-0 w-32 h-32 bg-yellow-200/40 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-                 <i class="fas fa-quote-left text-4xl text-sage-green/40 mb-4 block"></i>
-                 <p class="text-2xl md:text-3xl font-handwritten text-gray-700 max-w-3xl mx-auto leading-relaxed">"Это было волшебно! Костюм превзошел все ожидания, а атмосфера в мастерской заставляет возвращаться снова и снова."</p>
-                 <div class="mt-6 flex justify-center gap-1">
-                    <i class="fas fa-star text-yellow-400"></i><i class="fas fa-star text-yellow-400"></i><i class="fas fa-star text-yellow-400"></i><i class="fas fa-star text-yellow-400"></i><i class="fas fa-star text-yellow-400"></i>
-                 </div>
+            <!-- About Us (Dynamic) -->
+            <div class="glass p-8 rounded-3xl text-center shadow-sm mb-12" data-animate="fade-up">
+                 <h2 class="text-3xl font-handwritten text-sage-dark mb-4">О нас</h2>
+                 <p id="about-us-text" class="text-lg italic text-gray-600 max-w-3xl mx-auto">"Мы создаем магию..."</p>
+            </div>
+
+            <!-- Reviews -->
+            <div class="mb-12" data-animate="fade-up">
+                <h2 class="text-center text-4xl font-handwritten text-gray-800 mb-6">Отзывы гостей</h2>
+                <div id="reviews-grid" class="flex overflow-x-auto gap-4 pb-6 px-2 snap-x no-scrollbar">
+                    <!-- Загружаются через JS -->
+                </div>
+                
+                <!-- Hidden Review Form -->
+                <div id="leave-review-section" class="hidden max-w-md mx-auto mt-6 glass p-6 rounded-2xl animate-fade-in border-2 border-sage-green/30">
+                    <h4 class="text-xl font-handwritten font-bold mb-3 text-center">Оставьте ваш отзыв</h4>
+                    <p class="text-xs text-center text-gray-500 mb-4">Доступно, так как у вас есть завершенный заказ.</p>
+                    <form onsubmit="window.submitReview(event)" class="space-y-3">
+                        <textarea name="text" rows="3" required placeholder="Напишите пару теплых слов..." class="w-full glass-input p-3 rounded-xl outline-none text-sm"></textarea>
+                        <div class="flex justify-center gap-2 text-2xl text-yellow-400 py-2">
+                             <select name="rating" class="bg-transparent text-gray-700 text-sm border p-1 rounded">
+                                 <option value="5">5 Звезд</option>
+                                 <option value="4">4 Звезды</option>
+                                 <option value="3">3 Звезды</option>
+                             </select>
+                        </div>
+                        <button type="submit" class="w-full bg-sage-green text-white py-2 rounded-xl font-bold text-sm">Отправить</button>
+                    </form>
+                </div>
             </div>
         </section>
 
-        <!-- Rentals -->
+        <!-- Dynamic Sections -->
         <section id="rentals" class="page-section">
-            <div class="text-center mb-12">
-                <h2 class="text-6xl font-handwritten text-sage-dark mb-4 drop-shadow-sm">Аренда образов</h2>
-                <p class="text-gray-500 font-light text-lg">Станьте героем своей сказки</p>
-            </div>
-            <div id="rentals-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-16"></div>
+            <h2 class="text-center text-5xl font-handwritten text-sage-dark mb-8">Аренда</h2>
+            <div id="rentals-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </section>
 
-        <!-- Workshops -->
         <section id="workshops" class="page-section">
-            <div class="text-center mb-12">
-                <h2 class="text-6xl font-handwritten text-sage-dark mb-4 drop-shadow-sm">Мастер-классы</h2>
-                <p class="text-gray-500 font-light text-lg">Творите магию своими руками</p>
-            </div>
-            <div id="workshops-container" class="max-w-5xl mx-auto"></div>
+            <h2 class="text-center text-5xl font-handwritten text-sage-dark mb-8">Мастер-классы</h2>
+            <div id="workshops-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
         </section>
 
-        <!-- Handmade -->
         <section id="handmade" class="page-section">
-            <div class="text-center mb-12">
-                <h2 class="text-6xl font-handwritten text-sage-dark mb-4 drop-shadow-sm">Ручная работа</h2>
-                <p class="text-gray-500 font-light text-lg">Уютные вещи с душой</p>
-            </div>
+            <h2 class="text-center text-5xl font-handwritten text-sage-dark mb-8">Ручная работа</h2>
             <div id="handmade-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
         </section>
 
         <!-- My Orders -->
         <section id="my-orders" class="page-section">
-            <div class="max-w-2xl mx-auto">
-                <div class="text-center mb-10">
-                    <div class="inline-block p-4 rounded-full bg-white/40 mb-4 shadow-sm"><i class="fas fa-heart text-4xl text-sage-green"></i></div>
-                    <h2 class="text-5xl font-handwritten text-gray-800 mb-2">Ваши истории</h2>
-                </div>
-                
-                <div id="my-orders-list" class="space-y-4"></div>
-            </div>
+            <h2 class="text-center text-5xl font-handwritten text-sage-dark mb-8">Личный кабинет</h2>
+            <div id="my-orders-list" class="max-w-xl mx-auto space-y-4"></div>
         </section>
 
         <!-- Contacts -->
         <section id="contacts" class="page-section">
-            <div class="text-center mb-12">
-                <h2 class="text-6xl font-handwritten text-sage-dark mb-4">На связи</h2>
-            </div>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 glass p-8 md:p-12 rounded-[3rem] shadow-xl max-w-6xl mx-auto">
-                <div class="flex flex-col justify-center space-y-8">
-                    <div class="space-y-2">
-                        <h3 class="text-3xl font-handwritten text-gray-800">Контакты</h3>
-                        <p class="text-gray-500 text-sm">Мы всегда рады ответить на вопросы</p>
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <a href="tel:+79203226263" class="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/50 transition group border border-transparent hover:border-white/40">
-                            <div class="w-12 h-12 bg-sage-green/20 rounded-full flex items-center justify-center text-sage-dark"><i class="fas fa-phone"></i></div>
-                            <span class="text-lg text-gray-700 font-medium">+7 (920) 322-62-63</span>
-                        </a>
-                        <a href="https://wa.me/79203226263" target="_blank" class="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/50 transition group border border-transparent hover:border-white/40">
-                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600"><i class="fab fa-whatsapp"></i></div>
-                            <span class="text-lg text-gray-700 font-medium">WhatsApp</span>
-                        </a>
-                        <a href="https://t.me/Taniko_67" target="_blank" class="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/50 transition group border border-transparent hover:border-white/40">
-                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-500"><i class="fab fa-telegram-plane"></i></div>
-                            <span class="text-lg text-gray-700 font-medium">Telegram</span>
-                        </a>
-                        <a href="https://vk.com/shalfeyart" target="_blank" class="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/50 transition group border border-transparent hover:border-white/40">
-                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-700"><i class="fab fa-vk"></i></div>
-                            <span class="text-lg text-gray-700 font-medium">ВКонтакте</span>
-                        </a>
+            <div class="glass p-8 rounded-3xl max-w-2xl mx-auto text-center">
+                <h2 class="text-4xl font-handwritten text-sage-dark mb-6">Контакты</h2>
+                <div class="flex flex-col gap-4 text-lg text-gray-700 mb-8">
+                    <a href="tel:+79203226263"><i class="fas fa-phone mr-2 text-sage-green"></i> +7 (920) 322-62-63</a>
+                    <div class="flex justify-center gap-6 text-3xl text-gray-400">
+                        <a href="#" class="hover:text-green-500 transition"><i class="fab fa-whatsapp"></i></a>
+                        <a href="#" class="hover:text-blue-500 transition"><i class="fab fa-telegram"></i></a>
+                        <a href="#" class="hover:text-blue-700 transition"><i class="fab fa-vk"></i></a>
                     </div>
                 </div>
-                
-                <form class="space-y-4 bg-white/40 backdrop-blur-md p-8 rounded-3xl border border-white/40 shadow-inner" onsubmit="window.openOrderModal('Вопрос из контактов', 'Сообщение'); return false;">
-                    <h3 class="text-2xl font-handwritten text-gray-800 mb-2">Напишите нам</h3>
-                    <input type="text" placeholder="Ваше имя" class="w-full glass-input p-4 rounded-xl outline-none transition placeholder-gray-400 text-gray-700">
-                    <textarea rows="4" placeholder="Ваше сообщение..." class="w-full glass-input p-4 rounded-xl outline-none transition placeholder-gray-400 text-gray-700"></textarea>
-                    <button type="submit" class="w-full bg-sage-green text-white font-bold py-4 rounded-xl hover:shadow-lg hover:bg-opacity-90 transition transform active:scale-95">Отправить</button>
+                <form class="space-y-3 text-left" onsubmit="window.openOrderModal('Вопрос', 'Сообщение'); return false;">
+                    <input class="w-full glass-input p-3 rounded-xl" placeholder="Ваше имя">
+                    <textarea class="w-full glass-input p-3 rounded-xl" placeholder="Сообщение..."></textarea>
+                    <button class="w-full bg-sage-green text-white py-3 rounded-xl font-bold">Написать</button>
                 </form>
             </div>
         </section>
-
     </main>
 
-    <!-- Footer -->
-    <footer class="mt-20 py-12 glass border-t border-white/20 relative">
-        <div class="container mx-auto px-6 text-center">
-            <p class="font-handwritten text-4xl mb-4 text-sage-dark">Шалфей</p>
-            <p class="text-gray-500 text-sm">Творческая мастерская © 2024</p>
-        </div>
-    </footer>
-
-    <!-- ORDER MODAL -->
+    <!-- ORDER MODAL (Auto-filled & Readonly) -->
     <div id="order-modal" class="fixed inset-0 z-[100] hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeOrderModal()"></div>
-        <div class="glass w-full max-w-md p-8 rounded-3xl shadow-2xl relative transform scale-95 transition-all duration-300 border border-white/60 bg-white/80">
-            <button onclick="closeOrderModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"><i class="fas fa-times text-xl"></i></button>
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeOrderModal()"></div>
+        <div class="glass bg-white/90 w-full max-w-md p-6 rounded-3xl shadow-2xl relative transform scale-95 transition-all duration-300">
+            <button onclick="closeOrderModal()" class="absolute top-4 right-4 text-gray-400"><i class="fas fa-times text-xl"></i></button>
             
-            <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-sage-green/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <i class="fas fa-leaf text-2xl text-sage-green"></i>
-                </div>
-                <h3 class="text-3xl font-handwritten font-bold text-gray-800">Ваш заказ</h3>
-                <p id="modal-product-title" class="text-sage-dark font-medium mt-1">Название товара</p>
-            </div>
+            <h3 class="text-2xl font-handwritten font-bold text-center mb-1">Оформление</h3>
+            <p id="modal-product-title" class="text-center text-sage-dark font-medium text-sm mb-6">Товар</p>
 
-            <form id="modal-order-form" onsubmit="submitOrderFromModal(event)" class="space-y-4">
-                <input type="hidden" name="costume"> <!-- Сюда пишется название -->
-                
+            <form id="modal-order-form" onsubmit="submitOrderFromModal(event)" class="space-y-3">
+                <!-- READONLY FIELD -->
                 <div>
-                    <input name="name" required placeholder="Как к вам обращаться?" class="w-full glass-input p-4 rounded-xl outline-none transition">
-                </div>
-                <div>
-                    <input name="phone" required placeholder="Телефон или Telegram" class="w-full glass-input p-4 rounded-xl outline-none transition">
-                </div>
-                <div>
-                    <textarea name="message" rows="2" placeholder="Комментарий (дата, размер, пожелания)" class="w-full glass-input p-4 rounded-xl outline-none transition resize-none"></textarea>
+                    <label class="text-xs text-gray-400 font-bold ml-1">Выбранный товар</label>
+                    <input name="costume" readonly class="w-full glass-input p-3 rounded-xl outline-none font-bold text-gray-600">
                 </div>
                 
-                <button type="submit" class="w-full bg-sage-green text-white font-bold py-4 rounded-xl hover:shadow-lg hover:bg-opacity-90 transition transform active:scale-95 text-lg">
+                <input name="name" placeholder="Ваше имя" class="w-full glass-input p-3 rounded-xl outline-none">
+                <input name="phone" placeholder="Контакты для связи" class="w-full glass-input p-3 rounded-xl outline-none">
+                <textarea name="message" rows="2" placeholder="Комментарий (дата, размер)" class="w-full glass-input p-3 rounded-xl outline-none resize-none"></textarea>
+                
+                <button type="submit" class="w-full bg-sage-green text-white font-bold py-3 rounded-xl shadow-lg mt-2">
                     Отправить заявку
                 </button>
-                <p class="text-xs text-center text-gray-400 mt-2">Мы свяжемся с вами для уточнения деталей</p>
+                <p class="text-[10px] text-center text-gray-400 mt-2">После отправки статус появится в "Моих заказах"</p>
             </form>
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="notification" class="fixed bottom-8 right-8 glass bg-white/90 border-l-4 border-sage-green text-gray-800 px-6 py-4 rounded-xl shadow-2xl translate-y-32 opacity-0 transition-all duration-500 z-[110] flex items-center gap-4">
-        <div class="text-sage-green text-2xl"><i class="fas fa-check-circle"></i></div>
-        <div>
-            <h4 class="font-bold text-sm uppercase text-gray-500">Уведомление</h4>
-            <span id="notif-text" class="font-medium text-sm">Текст уведомления</span>
-        </div>
+    <!-- Toast -->
+    <div id="notification" class="fixed bottom-4 left-1/2 -translate-x-1/2 glass bg-black/80 text-white px-6 py-3 rounded-full shadow-2xl translate-y-32 opacity-0 transition-all duration-500 z-[110] text-sm font-medium whitespace-nowrap">
+        <span id="notif-text">Уведомление</span>
     </div>
 
     <script>
         // UI Logic
         const pages = document.querySelectorAll('.page-section');
-        const navLinks = document.querySelectorAll('.nav-link');
-        const mobileMenu = document.getElementById('mobile-menu');
+        const dockIcons = document.querySelectorAll('.dock-icon');
         const preloader = document.getElementById('preloader');
+        const burgerBtn = document.getElementById('burger-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
 
-        window.onload = () => {
-            setTimeout(() => { preloader.classList.add('hidden'); }, 1500);
-        };
+        window.onload = () => setTimeout(() => preloader.classList.add('hidden'), 1000);
 
         function showPage(pageId) {
             pages.forEach(p => p.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
             
-            navLinks.forEach(l => {
-                l.classList.remove('active');
-                if(l.getAttribute('onclick').includes(pageId)) l.classList.add('active');
+            // Update Dock
+            dockIcons.forEach(icon => {
+                icon.classList.remove('active');
+                if(icon.getAttribute('onclick').includes(pageId)) icon.classList.add('active');
             });
-            
-            if(pageId === 'my-orders') {
-                window.loadMyOrders();
-            }
 
-            mobileMenu.classList.add('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
             
             const container = document.getElementById(pageId);
             runAnimations(container);
         }
 
-        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
+        // Burger Animation
+        function toggleMenu() {
+            burgerBtn.classList.toggle('burger-open');
+            mobileMenu.classList.toggle('open');
+            
+            // Stagger links
+            const links = document.querySelectorAll('.mobile-link');
+            links.forEach((link, idx) => {
+                link.style.transitionDelay = mobileMenu.classList.contains('open') ? `${idx * 0.1}s` : '0s';
+            });
+        }
+        burgerBtn.addEventListener('click', toggleMenu);
 
-        // Sliders
+        // Animations Logic (Reuse)
         function initializeCardSliders() {
             document.querySelectorAll('.card-slider-container').forEach(container => {
                 if(container.dataset.init) return;
                 container.dataset.init = true;
-
                 const slides = container.querySelectorAll('.slide');
                 if(slides.length < 2) return; 
-
                 let current = 0;
                 const nextBtn = container.querySelector('.slider-next');
                 const prevBtn = container.querySelector('.slider-prev');
-
                 const show = (idx) => {
                     slides.forEach(s => s.classList.remove('active'));
                     current = (idx + slides.length) % slides.length;
                     slides[current].classList.add('active');
                 };
-
                 if(nextBtn) nextBtn.onclick = (e) => { e.stopPropagation(); show(current + 1); };
                 if(prevBtn) prevBtn.onclick = (e) => { e.stopPropagation(); show(current - 1); };
             });
@@ -631,12 +706,9 @@
         function runAnimations(container) {
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('is-visible');
-                    }
+                    if (entry.isIntersecting) entry.target.classList.add('is-visible');
                 });
             }, { threshold: 0.1 });
-
             container.querySelectorAll('[data-animate]').forEach(el => observer.observe(el));
         }
 
@@ -644,7 +716,7 @@
             const el = document.getElementById('notification');
             document.getElementById('notif-text').innerText = msg;
             el.classList.remove('translate-y-32', 'opacity-0');
-            setTimeout(() => el.classList.add('translate-y-32', 'opacity-0'), 4000);
+            setTimeout(() => el.classList.add('translate-y-32', 'opacity-0'), 3000);
         }
     </script>
 </body>
