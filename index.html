@@ -10,7 +10,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Шрифты -->
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Иконки -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -38,8 +38,8 @@
         // Инициализация
         signInAnonymously(auth).then(() => {
             console.log("Firebase Connected");
-            loadContent(); // Загрузка товаров
-            loadMyOrders(); // Загрузка моих заявок
+            loadContent(); 
+            loadMyOrders(); 
         }).catch((error) => console.error("Auth Error", error));
 
         // 1. ЗАГРУЗКА ТОВАРОВ
@@ -50,17 +50,16 @@
                 const container = document.getElementById(`${section}-container`);
                 if (!container) continue;
 
-                container.innerHTML = '<div class="col-span-full text-center py-10"><i class="fas fa-spinner fa-spin text-3xl text-sage-green"></i></div>';
+                container.innerHTML = '<div class="col-span-full text-center py-10"><i class="fas fa-spinner fa-spin text-3xl text-white"></i></div>';
 
                 try {
-                    // Запрос к БД
                     const q = query(collection(db, "products"), where("category", "==", section));
                     const querySnapshot = await getDocs(q);
                     
                     container.innerHTML = ''; 
 
                     if (querySnapshot.empty) {
-                        container.innerHTML = '<div class="col-span-full text-center text-gray-500 italic py-10">В этом разделе пока пусто...</div>';
+                        container.innerHTML = '<div class="col-span-full text-center text-white/70 italic py-10">В этом разделе пока пусто...</div>';
                         continue;
                     }
 
@@ -70,7 +69,6 @@
                         container.insertAdjacentHTML('beforeend', cardHTML);
                     });
 
-                    // Инициализируем слайдеры только после добавления HTML
                     setTimeout(() => {
                         initializeCardSliders();
                         runAnimations(container);
@@ -78,57 +76,73 @@
 
                 } catch (error) {
                     console.error(`Error loading ${section}:`, error);
-                    container.innerHTML = '<div class="col-span-full text-center text-red-400">Ошибка загрузки данных.</div>';
+                    container.innerHTML = '<div class="col-span-full text-center text-red-200">Ошибка загрузки данных.</div>';
                 }
             }
         }
 
-        // 2. ОТПРАВКА ЗАКАЗА
-        window.submitOrder = async (event, formId, type) => {
+        // 2. ОТПРАВКА ЗАКАЗА (Через Модалку)
+        window.openOrderModal = (title, type) => {
+            const modal = document.getElementById('order-modal');
+            const form = document.getElementById('modal-order-form');
+            const titleInput = form.querySelector('input[name="costume"]');
+            const modalTitle = document.getElementById('modal-product-title');
+
+            modalTitle.innerText = title || 'Оформление заявки';
+            titleInput.value = `${type}: ${title}`;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('div[class*="transform"]').classList.remove('scale-95');
+            }, 10);
+        };
+
+        window.closeOrderModal = () => {
+            const modal = document.getElementById('order-modal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('div[class*="transform"]').classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        };
+
+        window.submitOrderFromModal = async (event) => {
             event.preventDefault();
-            const form = document.getElementById(formId);
+            const form = document.getElementById('modal-order-form');
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
             
-            data.type = type;
             data.status = 'new';
             data.createdAt = new Date().toISOString();
-            data.adminReply = ""; // Поле для ответа админа
+            data.adminReply = "";
 
             const btn = form.querySelector('button[type="submit"]');
-            const originalText = btn.innerText;
-            btn.innerText = "Отправка...";
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             btn.disabled = true;
 
             try {
-                // Сохраняем в Firebase
                 const docRef = await addDoc(collection(db, "orders"), data);
-                
-                // === СОХРАНЯЕМ ID ЛОКАЛЬНО ===
                 saveOrderLocally(docRef.id);
-
-                showNotification("Заявка отправлена! Ответ смотрите во вкладке 'Мои заявки'.");
+                showNotification("Заявка отправлена! Мы скоро свяжемся с вами.");
                 form.reset();
-                
-                // Сразу обновляем список
+                closeOrderModal();
                 loadMyOrders(); 
-
             } catch (e) {
                 console.error("Ошибка: ", e);
                 showNotification("Ошибка при отправке. Попробуйте позже.");
             } finally {
-                btn.innerText = originalText;
+                btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         };
 
+        // Сохранение и загрузка локальных заявок
         function saveOrderLocally(orderId) {
             let myOrders = JSON.parse(localStorage.getItem('shalfey_orders') || '[]');
             myOrders.push(orderId);
             localStorage.setItem('shalfey_orders', JSON.stringify(myOrders));
         }
 
-        // 3. ЗАГРУЗКА "МОИ ЗАЯВКИ"
         window.loadMyOrders = async () => {
             const container = document.getElementById('my-orders-list');
             if(!container) return;
@@ -136,15 +150,13 @@
             const myOrdersIds = JSON.parse(localStorage.getItem('shalfey_orders') || '[]');
             
             if (myOrdersIds.length === 0) {
-                container.innerHTML = '<div class="text-center text-gray-500 py-6 bg-white rounded-lg shadow-sm">Вы еще не оставляли заявок с этого устройства.</div>';
+                container.innerHTML = '<div class="glass p-6 rounded-2xl text-center text-gray-600">Вы еще не оставляли заявок с этого устройства.</div>';
                 return;
             }
 
-            container.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-sage-green"></i> Проверка статусов...</div>';
+            container.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-white"></i></div>';
             
             let html = '';
-            // Проходим по сохраненным ID и грузим свежие данные
-            // (В реверсе, чтобы новые были сверху)
             for (let i = myOrdersIds.length - 1; i >= 0; i--) {
                 const id = myOrdersIds[i];
                 try {
@@ -153,39 +165,33 @@
                         const order = docSnap.data();
                         const date = new Date(order.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
                         
-                        let statusBadge = '';
-                        let statusColor = '';
+                        let statusBadge = 'bg-yellow-100/80 text-yellow-800';
+                        let statusText = 'В обработке';
                         
-                        if (order.status === 'new') {
-                            statusBadge = 'В обработке';
-                            statusColor = 'bg-yellow-100 text-yellow-700';
-                        } else if (order.status === 'answered') {
-                            statusBadge = 'Есть ответ!';
-                            statusColor = 'bg-blue-100 text-blue-700 font-bold';
+                        if (order.status === 'answered') {
+                            statusBadge = 'bg-blue-100/80 text-blue-800 font-bold';
+                            statusText = 'Есть ответ!';
                         } else if (order.status === 'done') {
-                            statusBadge = 'Завершено';
-                            statusColor = 'bg-green-100 text-green-700';
+                            statusBadge = 'bg-green-100/80 text-green-800';
+                            statusText = 'Завершено';
                         }
 
                         html += `
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-4 transition hover:shadow-md animate-fade-in">
+                        <div class="glass p-6 rounded-2xl mb-4 transition hover:bg-white/40 animate-fade-in border border-white/40">
                             <div class="flex flex-wrap justify-between items-start gap-2 mb-3">
                                 <h4 class="font-bold text-xl text-gray-800">${order.costume || 'Сообщение'}</h4>
-                                <span class="${statusColor} text-xs px-3 py-1 rounded-full uppercase tracking-wider">${statusBadge}</span>
+                                <span class="${statusBadge} text-xs px-3 py-1 rounded-full uppercase tracking-wider shadow-sm backdrop-blur-sm">${statusText}</span>
                             </div>
-                            <div class="text-sm text-gray-400 mb-4 flex items-center gap-2">
+                            <div class="text-sm text-gray-500 mb-4 flex items-center gap-2">
                                 <i class="far fa-clock"></i> ${date}
                             </div>
                             
-                            <!-- Ответ администратора -->
                             ${order.adminReply ? `
-                                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 relative">
-                                    <div class="absolute top-0 left-4 -translate-y-1/2 bg-blue-100 text-blue-600 px-2 py-0.5 rounded text-xs font-bold">Ответ Шалфея</div>
-                                    <p class="text-gray-800 mt-2">${order.adminReply}</p>
+                                <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 relative mt-2 backdrop-blur-sm">
+                                    <div class="text-xs font-bold text-blue-600 mb-1">Ответ Шалфея:</div>
+                                    <p class="text-gray-800">${order.adminReply}</p>
                                 </div>
-                            ` : `
-                                <div class="text-sm text-gray-500 italic">Ожидайте ответа администратора...</div>
-                            `}
+                            ` : ''}
                         </div>`;
                     }
                 } catch (e) {
@@ -195,219 +201,254 @@
             container.innerHTML = html || '<div class="text-center text-gray-500">История пуста</div>';
         };
 
-
         // --- КАРТОЧКИ ---
         function createCardHTML(item, type) {
-            let images = Array.isArray(item.images) ? item.images : [item.images || 'https://via.placeholder.com/400x500'];
+            let images = Array.isArray(item.images) ? item.images : [item.images || ''];
             if(images.length === 0 || !images[0]) images = ['https://via.placeholder.com/400x500?text=No+Image'];
 
             const slidesHTML = images.map((img, index) => 
-                `<div class="slide ${index === 0 ? 'active' : ''}"><img src="${img}" class="w-full h-full object-cover"></div>`
+                `<div class="slide ${index === 0 ? 'active' : ''}"><img src="${img}" class="w-full h-full object-cover transition-transform duration-700 hover:scale-105"></div>`
             ).join('');
 
             const navHTML = images.length > 1 ? `
-                <button class="slider-prev absolute left-2 top-1/2 -translate-y-1/2 bg-white/70 p-2 rounded-full shadow hover:bg-white z-10 w-8 h-8 flex items-center justify-center"><i class="fas fa-chevron-left"></i></button>
-                <button class="slider-next absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 p-2 rounded-full shadow hover:bg-white z-10 w-8 h-8 flex items-center justify-center"><i class="fas fa-chevron-right"></i></button>
+                <button class="slider-prev absolute left-2 top-1/2 -translate-y-1/2 bg-white/30 backdrop-blur-md p-2 rounded-full hover:bg-white/50 text-white z-10 w-8 h-8 flex items-center justify-center transition"><i class="fas fa-chevron-left"></i></button>
+                <button class="slider-next absolute right-2 top-1/2 -translate-y-1/2 bg-white/30 backdrop-blur-md p-2 rounded-full hover:bg-white/50 text-white z-10 w-8 h-8 flex items-center justify-center transition"><i class="fas fa-chevron-right"></i></button>
             ` : '';
 
-            let actionBtn = '';
-            if (type === 'rentals') actionBtn = `<button onclick="window.prepareOrder('${item.title}', 'Аренда')" class="mt-4 w-full border-2 border-sage-green text-sage-green hover:bg-sage-green hover:text-white py-2 rounded-lg transition font-bold">Забронировать</button>`;
-            else if (type === 'workshops') actionBtn = `<button onclick="window.prepareOrder('${item.title}', 'МК')" class="mt-4 bg-sage-green text-white font-bold py-2 px-6 rounded-lg hover:opacity-90 transition shadow-lg shadow-green-100">Записаться</button>`;
+            let btnText = 'Заказать';
+            let btnAction = `window.openOrderModal('${item.title}', 'Изделие')`;
             
-            const price = `<p class="text-xl font-bold text-sage-green mt-2">${item.price}</p>`;
+            if (type === 'rentals') { btnText = 'Забронировать'; btnAction = `window.openOrderModal('${item.title}', 'Аренда')`; }
+            else if (type === 'workshops') { btnText = 'Записаться'; btnAction = `window.openOrderModal('${item.title}', 'МК')`; }
+            
+            const price = `<p class="text-xl font-bold text-sage-dark mt-2">${item.price}</p>`;
 
-            // Разный дизайн для МК и остальных
+            // Дизайн для МК (горизонтальный)
             if(type === 'workshops') {
                  return `
-                <div data-animate="fade-up" class="flex flex-col md:flex-row gap-8 bg-white p-6 md:p-8 rounded-2xl shadow-md mb-8 hover:shadow-xl transition-shadow duration-300">
-                    <div class="w-full md:w-1/3 h-64 relative rounded-xl overflow-hidden card-slider-container bg-gray-100">
+                <div data-animate="fade-up" class="glass group flex flex-col md:flex-row gap-8 p-6 md:p-8 rounded-3xl mb-8 border border-white/40 hover:shadow-2xl transition-all duration-300">
+                    <div class="w-full md:w-1/3 h-64 relative rounded-2xl overflow-hidden card-slider-container shadow-inner">
                         ${slidesHTML} ${navHTML}
                     </div>
                     <div class="flex-1 flex flex-col justify-center">
                         <h3 class="text-3xl font-handwritten font-bold text-gray-800 mb-2">${item.title}</h3>
                         <p class="text-gray-600 mb-4 leading-relaxed">${item.description}</p>
                         ${price}
-                        <div class="mt-2">${actionBtn}</div>
+                        <div class="mt-4">
+                            <button onclick="${btnAction}" class="glass-btn px-8 py-3 rounded-xl font-bold text-gray-700 hover:text-sage-dark transition shadow-lg">${btnText}</button>
+                        </div>
                     </div>
                 </div>`;
             }
 
+            // Вертикальная карточка
             return `
-            <div data-animate="zoom-in" class="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col h-full group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                <div class="h-80 relative card-slider-container bg-gray-100">
+            <div data-animate="zoom-in" class="glass rounded-3xl overflow-hidden flex flex-col h-full group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-white/40">
+                <div class="h-80 relative card-slider-container overflow-hidden">
                     ${slidesHTML} ${navHTML}
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
                 </div>
-                <div class="p-6 flex flex-col flex-grow">
-                    <h4 class="text-2xl font-handwritten font-bold text-gray-800 mb-2">${item.title}</h4>
-                    <p class="text-gray-600 text-sm mb-4 flex-grow line-clamp-4">${item.description}</p>
-                    <div class="mt-auto pt-4 border-t border-gray-100">
+                <div class="p-6 flex flex-col flex-grow relative">
+                    <div class="absolute top-0 left-0 w-full h-full bg-white/40 backdrop-blur-3xl -z-10"></div>
+                    <h4 class="text-2xl font-handwritten font-bold text-gray-800 mb-2 leading-tight">${item.title}</h4>
+                    <p class="text-gray-600 text-sm mb-4 flex-grow line-clamp-4 font-light">${item.description}</p>
+                    <div class="mt-auto pt-4 border-t border-gray-200/50 flex items-center justify-between">
                         ${price}
-                        ${actionBtn}
+                        <button onclick="${btnAction}" class="glass-btn-sm px-4 py-2 rounded-lg text-sm font-bold text-gray-700 hover:text-sage-dark transition">${btnText}</button>
                     </div>
                 </div>
             </div>`;
         }
 
-        window.prepareOrder = (title, type) => {
-            showPage('rentals'); // Открываем вкладку с формой
-            setTimeout(() => {
-                 const input = document.querySelector('input[name="costume"]');
-                if(input) {
-                    input.value = `${type}: ${title}`;
-                    input.scrollIntoView({behavior: "smooth", block: "center"});
-                    input.focus();
-                }
-            }, 500);
-        };
-
         window.initializeCardSliders = initializeCardSliders;
         window.runAnimations = runAnimations;
-
     </script>
 
     <style>
-        html { scroll-behavior: smooth; }
-        body { font-family: 'Inter', sans-serif; background-color: #FBF9F6; color: #4A4A4A; }
+        /* Glassmorphism Core */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 50%, #dcfce7 100%);
+            background-attachment: fixed;
+            color: #4A4A4A;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+
+        .glass-dark {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(4px);
+        }
+        .glass-btn:hover {
+            background: rgba(255, 255, 255, 0.85);
+            transform: translateY(-1px);
+        }
+        
+        .glass-btn-sm {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .glass-btn-sm:hover { background: rgba(255, 255, 255, 0.9); }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(4px);
+        }
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: #8A9A5B;
+        }
+
+        /* Typography & Colors */
         h1, h2, h3, h4, .font-handwritten { font-family: 'Caveat', cursive; }
         .text-sage-green { color: #8A9A5B; }
+        .text-sage-dark { color: #5F6F3A; }
         .bg-sage-green { background-color: #8A9A5B; }
-        .bg-lavender-light { background-color: #F5F5FD; }
         
-        .nav-link.active { color: #8A9A5B; font-weight: bold; position: relative; }
-        .nav-link.active::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 100%; height: 2px; background: #8A9A5B; border-radius: 2px; }
+        /* Navigation */
+        .nav-link.active { color: #5F6F3A; font-weight: 700; background: rgba(255,255,255,0.4); border-radius: 12px; }
         
-        .page-section { display: none; animation: fadeIn 0.6s ease-out; }
+        .page-section { display: none; animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
         .page-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Sliders */
         .card-slider-container .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.5s ease-in-out; z-index: 1; }
         .card-slider-container .slide.active { opacity: 1; z-index: 2; }
         
-        /* Animations */
-        [data-animate] { opacity: 0; transition: 0.8s ease-out; }
+        /* Scroll Animation */
+        [data-animate] { opacity: 0; transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
         .is-visible { opacity: 1; transform: none !important; }
         [data-animate="fade-up"] { transform: translateY(40px); }
         [data-animate="zoom-in"] { transform: scale(0.95); }
 
         /* Preloader */
-        #preloader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a1a; z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.8s ease, visibility 0.8s ease; }
+        #preloader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2f3630; z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.8s ease, visibility 0.8s ease; }
         #preloader.hidden { opacity: 0; visibility: hidden; }
-        #preloader-logo .sage-path { stroke-dasharray: 1500; stroke-dashoffset: 1500; animation: draw 3.5s ease-in-out forwards; }
+        #preloader-logo .sage-path { stroke-dasharray: 1500; stroke-dashoffset: 1500; animation: draw 3s ease-in-out forwards; }
         @keyframes draw { to { stroke-dashoffset: 0; } }
     </style>
 </head>
-<body class="antialiased">
+<body class="antialiased selection:bg-sage-green selection:text-white">
 
     <!-- Preloader -->
     <div id="preloader">
-        <svg id="preloader-logo" width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <path class="sage-path" d="M100 180 V 50 M100 130 C75 125 75 155 100 150 M100 130 C125 125 125 155 100 150 M100 100 C80 95 80 120 100 115 M100 100 C120 95 120 120 100 115 M100 75 C90 70 90 90 100 85 M100 75 C110 70 110 90 100 85 M80 160 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 M120,165 a4,4 0 1,0 -8,0 a4,4 0 1,0 8,0 M75 90 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <svg id="preloader-logo" width="150" height="150" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <path class="sage-path" d="M100 180 V 50 M100 130 C75 125 75 155 100 150 M100 130 C125 125 125 155 100 150 M100 100 C80 95 80 120 100 115 M100 100 C120 95 120 120 100 115 M100 75 C90 70 90 90 100 85 M100 75 C110 70 110 90 100 85 M80 160 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 M120,165 a4,4 0 1,0 -8,0 a4,4 0 1,0 8,0 M75 90 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" fill="none" stroke="#8A9A5B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
     </div>
 
     <!-- Header -->
-    <header class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50">
+    <header class="glass-dark shadow-sm sticky top-0 z-50">
         <div class="container mx-auto px-6 py-3 flex justify-between items-center">
             <a href="#" class="flex items-center gap-3 group" onclick="showPage('home')">
-                <div class="h-12 w-12 rounded-full bg-white flex items-center justify-center shadow-md overflow-hidden border-2 border-transparent group-hover:border-sage-green transition">
+                <div class="h-10 w-10 rounded-full bg-white flex items-center justify-center shadow-md overflow-hidden border border-white/50 group-hover:scale-110 transition duration-300">
                     <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/2499.jpg" alt="Логотип" class="h-full w-full object-cover">
                 </div>
-                <span class="text-3xl font-handwritten text-sage-green font-bold">Шалфей</span>
+                <span class="text-3xl font-handwritten text-sage-green font-bold drop-shadow-sm">Шалфей</span>
             </a>
             
-            <nav class="hidden lg:flex space-x-8 items-center">
-                <a href="#" class="nav-link text-gray-600 hover:text-sage-green transition" onclick="showPage('home')">Главная</a>
-                <a href="#" class="nav-link text-gray-600 hover:text-sage-green transition" onclick="showPage('rentals')">Аренда</a>
-                <a href="#" class="nav-link text-gray-600 hover:text-sage-green transition" onclick="showPage('workshops')">Мастер-классы</a>
-                <a href="#" class="nav-link text-gray-600 hover:text-sage-green transition" onclick="showPage('handmade')">Изделия</a>
-                <a href="#" class="nav-link text-gray-600 hover:text-sage-green transition" onclick="showPage('contacts')">Контакты</a>
-                <!-- Кнопка Мои Заявки -->
-                <button onclick="showPage('my-orders')" class="bg-sage-green text-white px-5 py-2 rounded-full font-bold hover:bg-opacity-90 transition shadow-lg shadow-green-100 flex items-center gap-2">
-                    <i class="fas fa-inbox"></i> Мои заявки
-                </button>
+            <nav class="hidden lg:flex items-center p-1 bg-white/30 backdrop-blur-md rounded-2xl border border-white/20">
+                <a href="#" class="nav-link px-5 py-2 text-gray-700 hover:text-sage-green transition rounded-xl" onclick="showPage('home')">Главная</a>
+                <a href="#" class="nav-link px-5 py-2 text-gray-700 hover:text-sage-green transition rounded-xl" onclick="showPage('rentals')">Аренда</a>
+                <a href="#" class="nav-link px-5 py-2 text-gray-700 hover:text-sage-green transition rounded-xl" onclick="showPage('workshops')">МК</a>
+                <a href="#" class="nav-link px-5 py-2 text-gray-700 hover:text-sage-green transition rounded-xl" onclick="showPage('handmade')">Изделия</a>
+                <a href="#" class="nav-link px-5 py-2 text-gray-700 hover:text-sage-green transition rounded-xl" onclick="showPage('contacts')">Контакты</a>
             </nav>
 
-            <button id="mobile-menu-btn" class="lg:hidden text-gray-700 focus:outline-none p-2">
-                <i class="fas fa-bars text-2xl"></i>
-            </button>
+            <div class="flex items-center gap-4">
+                <button onclick="showPage('my-orders')" class="hidden lg:flex bg-gradient-to-r from-[#8A9A5B] to-[#74824b] text-white px-5 py-2 rounded-xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition shadow-md shadow-green-100/50 items-center gap-2">
+                    <i class="fas fa-heart"></i> <span class="text-sm">Мои заявки</span>
+                </button>
+                <button id="mobile-menu-btn" class="lg:hidden text-gray-700 glass p-2 rounded-lg">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
         </div>
 
         <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden lg:hidden bg-white border-t absolute w-full left-0 top-full shadow-lg">
-            <a href="#" class="block py-4 px-6 hover:bg-gray-50 border-b border-gray-100" onclick="showPage('home')">Главная</a>
-            <a href="#" class="block py-4 px-6 hover:bg-gray-50 border-b border-gray-100" onclick="showPage('rentals')">Аренда</a>
-            <a href="#" class="block py-4 px-6 hover:bg-gray-50 border-b border-gray-100" onclick="showPage('workshops')">Мастер-классы</a>
-            <a href="#" class="block py-4 px-6 hover:bg-gray-50 border-b border-gray-100" onclick="showPage('handmade')">Изделия</a>
-            <a href="#" class="block py-4 px-6 hover:bg-gray-50 border-b border-gray-100" onclick="showPage('contacts')">Контакты</a>
-            <a href="#" class="block py-4 px-6 text-sage-green font-bold bg-sage-green/5" onclick="showPage('my-orders')"><i class="fas fa-inbox mr-2"></i>Мои заявки</a>
+        <div id="mobile-menu" class="hidden lg:hidden glass absolute w-full left-0 top-full shadow-xl border-t border-white/40 backdrop-blur-xl">
+            <div class="flex flex-col p-4 space-y-2">
+                <a href="#" class="block py-3 px-4 rounded-xl hover:bg-white/50" onclick="showPage('home')">Главная</a>
+                <a href="#" class="block py-3 px-4 rounded-xl hover:bg-white/50" onclick="showPage('rentals')">Аренда</a>
+                <a href="#" class="block py-3 px-4 rounded-xl hover:bg-white/50" onclick="showPage('workshops')">Мастер-классы</a>
+                <a href="#" class="block py-3 px-4 rounded-xl hover:bg-white/50" onclick="showPage('handmade')">Изделия</a>
+                <a href="#" class="block py-3 px-4 rounded-xl hover:bg-white/50" onclick="showPage('contacts')">Контакты</a>
+                <a href="#" class="block py-3 px-4 rounded-xl bg-sage-green/10 text-sage-dark font-bold mt-2" onclick="showPage('my-orders')"><i class="fas fa-inbox mr-2"></i>Мои заявки</a>
+            </div>
         </div>
     </header>
 
-    <main class="container mx-auto px-4 py-8 md:py-12 min-h-screen">
+    <main class="container mx-auto px-4 py-8 md:py-12 min-h-[80vh]">
 
         <!-- Home -->
         <section id="home" class="page-section active">
-            <div class="text-center mb-16 animate-fade-in">
-                <h1 class="text-5xl md:text-7xl font-bold text-sage-green mb-6 font-handwritten">Место, где живет вдохновение</h1>
-                <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">«Шалфей» — это уютная мастерская души. Мы создаем костюмы для сказочных историй, проводим теплые мастер-классы и делимся магией ручной работы.</p>
+            <div class="text-center mb-16 animate-fade-in relative">
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-green-200/30 rounded-full blur-3xl -z-10"></div>
+                <h1 class="text-6xl md:text-8xl font-bold text-gray-800 mb-6 font-handwritten drop-shadow-sm"><span class="text-sage-green">Место,</span> где живет душа</h1>
+                <p class="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto leading-relaxed font-light">Костюмы для историй, мастер-классы для рук и изделия для сердца.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 px-2">
-                <div onclick="showPage('rentals')" class="cursor-pointer group relative h-80 rounded-2xl overflow-hidden shadow-lg transform hover:-translate-y-2 transition duration-500">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/kostum%20krasny%20plasch%20eshe%20photo.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
-                    <div class="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition">
-                        <h3 class="text-white text-4xl font-handwritten font-bold drop-shadow-md">Аренда</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 px-2">
+                <div onclick="showPage('rentals')" class="cursor-pointer group relative h-96 rounded-3xl overflow-hidden shadow-xl border-4 border-white transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/kostum%20krasny%20plasch%20eshe%20photo.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-1000">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end justify-center p-8">
+                        <h3 class="text-white text-5xl font-handwritten font-bold drop-shadow-md group-hover:text-sage-green transition-colors">Аренда</h3>
                     </div>
                 </div>
-                <div onclick="showPage('workshops')" class="cursor-pointer group relative h-80 rounded-2xl overflow-hidden shadow-lg transform hover:-translate-y-2 transition duration-500">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
-                    <div class="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition">
-                        <h3 class="text-white text-4xl font-handwritten font-bold drop-shadow-md">Мастер-классы</h3>
+                <div onclick="showPage('workshops')" class="cursor-pointer group relative h-96 rounded-3xl overflow-hidden shadow-xl border-4 border-white transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-1000">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end justify-center p-8">
+                        <h3 class="text-white text-5xl font-handwritten font-bold drop-shadow-md group-hover:text-sage-green transition-colors">МК</h3>
                     </div>
                 </div>
-                <div onclick="showPage('handmade')" class="cursor-pointer group relative h-80 rounded-2xl overflow-hidden shadow-lg transform hover:-translate-y-2 transition duration-500">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kluchnitsa%20dlya%20kluchey%20vvide%20domikov.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
-                    <div class="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition">
-                        <h3 class="text-white text-4xl font-handwritten font-bold drop-shadow-md">Изделия</h3>
+                <div onclick="showPage('handmade')" class="cursor-pointer group relative h-96 rounded-3xl overflow-hidden shadow-xl border-4 border-white transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kluchnitsa%20dlya%20kluchey%20vvide%20domikov.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-1000">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end justify-center p-8">
+                        <h3 class="text-white text-5xl font-handwritten font-bold drop-shadow-md group-hover:text-sage-green transition-colors">Изделия</h3>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-20 bg-lavender-light p-10 rounded-3xl text-center shadow-inner" data-animate="fade-up">
-                 <h2 class="text-4xl font-handwritten text-sage-green mb-4">О нас говорят</h2>
-                 <p class="text-xl italic text-gray-600 max-w-2xl mx-auto">"Это было волшебно! Костюм превзошел все ожидания, а атмосфера в мастерской заставляет возвращаться снова и снова."</p>
+            <div class="mt-24 glass p-10 md:p-14 rounded-[3rem] text-center shadow-lg relative overflow-hidden" data-animate="fade-up">
+                 <div class="absolute top-0 right-0 w-32 h-32 bg-yellow-200/40 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+                 <i class="fas fa-quote-left text-4xl text-sage-green/40 mb-4 block"></i>
+                 <p class="text-2xl md:text-3xl font-handwritten text-gray-700 max-w-3xl mx-auto leading-relaxed">"Это было волшебно! Костюм превзошел все ожидания, а атмосфера в мастерской заставляет возвращаться снова и снова."</p>
+                 <div class="mt-6 flex justify-center gap-1">
+                    <i class="fas fa-star text-yellow-400"></i><i class="fas fa-star text-yellow-400"></i><i class="fas fa-star text-yellow-400"></i><i class="fas fa-star text-yellow-400"></i><i class="fas fa-star text-yellow-400"></i>
+                 </div>
             </div>
         </section>
 
         <!-- Rentals -->
         <section id="rentals" class="page-section">
             <div class="text-center mb-12">
-                <h2 class="text-5xl md:text-6xl font-handwritten text-sage-green mb-4">Аренда образов</h2>
-                <p class="text-gray-500">Для фотосессий, праздников и фестивалей</p>
+                <h2 class="text-6xl font-handwritten text-sage-dark mb-4 drop-shadow-sm">Аренда образов</h2>
+                <p class="text-gray-500 font-light text-lg">Станьте героем своей сказки</p>
             </div>
-            
-            <div id="rentals-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-                <!-- Сюда грузятся товары -->
-            </div>
-            
-            <div class="bg-white p-8 md:p-12 rounded-3xl shadow-xl max-w-4xl mx-auto border border-gray-100">
-                <h3 class="text-4xl font-handwritten text-sage-green mb-8 text-center">Забронировать костюм</h3>
-                <form id="rental-form" class="grid grid-cols-1 md:grid-cols-2 gap-6" onsubmit="submitOrder(event, 'rental-form', 'rentals')">
-                    <input name="name" type="text" placeholder="Ваше имя" required class="p-4 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 ring-sage-green outline-none transition">
-                    <input name="phone" type="tel" placeholder="Телефон" required class="p-4 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 ring-sage-green outline-none transition">
-                    <input name="costume" type="text" placeholder="Какой костюм вас интересует?" required class="md:col-span-2 p-4 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 ring-sage-green outline-none transition">
-                    <input name="dates" type="text" placeholder="Желаемая дата аренды" required class="md:col-span-2 p-4 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 ring-sage-green outline-none transition">
-                    <button type="submit" class="md:col-span-2 bg-sage-green text-white font-bold py-4 rounded-xl hover:shadow-lg hover:-translate-y-1 transition duration-300 text-lg">Отправить заявку</button>
-                </form>
-            </div>
+            <div id="rentals-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-16"></div>
         </section>
 
         <!-- Workshops -->
         <section id="workshops" class="page-section">
             <div class="text-center mb-12">
-                <h2 class="text-5xl md:text-6xl font-handwritten text-sage-green mb-4">Мастер-классы</h2>
-                <p class="text-gray-500">Создавайте красоту своими руками</p>
+                <h2 class="text-6xl font-handwritten text-sage-dark mb-4 drop-shadow-sm">Мастер-классы</h2>
+                <p class="text-gray-500 font-light text-lg">Творите магию своими руками</p>
             </div>
             <div id="workshops-container" class="max-w-5xl mx-auto"></div>
         </section>
@@ -415,97 +456,128 @@
         <!-- Handmade -->
         <section id="handmade" class="page-section">
             <div class="text-center mb-12">
-                <h2 class="text-5xl md:text-6xl font-handwritten text-sage-green mb-4">Ручная работа</h2>
-                <p class="text-gray-500">Уникальные изделия для уюта</p>
+                <h2 class="text-6xl font-handwritten text-sage-dark mb-4 drop-shadow-sm">Ручная работа</h2>
+                <p class="text-gray-500 font-light text-lg">Уютные вещи с душой</p>
             </div>
             <div id="handmade-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
         </section>
 
-        <!-- NEW: My Orders Section -->
+        <!-- My Orders -->
         <section id="my-orders" class="page-section">
-            <div class="max-w-3xl mx-auto">
-                <div class="text-center mb-12">
-                    <h2 class="text-5xl md:text-6xl font-handwritten text-sage-green mb-4">Мои заявки</h2>
-                    <p class="text-gray-500">Отслеживайте статус ваших обращений и читайте ответы администратора</p>
+            <div class="max-w-2xl mx-auto">
+                <div class="text-center mb-10">
+                    <div class="inline-block p-4 rounded-full bg-white/40 mb-4 shadow-sm"><i class="fas fa-heart text-4xl text-sage-green"></i></div>
+                    <h2 class="text-5xl font-handwritten text-gray-800 mb-2">Ваши истории</h2>
                 </div>
                 
-                <div id="my-orders-list" class="space-y-6">
-                    <!-- Загружается через JS -->
-                </div>
-                
-                <div class="mt-12 text-center bg-yellow-50 p-6 rounded-2xl text-sm text-gray-600 border border-yellow-100">
-                    <i class="fas fa-info-circle mr-2 text-yellow-500 text-lg"></i>
-                    Обратите внимание: история заявок хранится в вашем браузере. Если вы зашли с другого устройства или очистили кэш, список может быть пуст.
-                </div>
+                <div id="my-orders-list" class="space-y-4"></div>
             </div>
         </section>
 
         <!-- Contacts -->
         <section id="contacts" class="page-section">
             <div class="text-center mb-12">
-                <h2 class="text-5xl md:text-6xl font-handwritten text-sage-green mb-4">Давайте дружить</h2>
+                <h2 class="text-6xl font-handwritten text-sage-dark mb-4">На связи</h2>
             </div>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 bg-white p-8 md:p-12 rounded-3xl shadow-xl max-w-6xl mx-auto">
-                <div class="flex flex-col justify-center">
-                    <h3 class="text-4xl font-handwritten text-gray-800 mb-8">Наши контакты</h3>
-                    <div class="space-y-6 text-xl text-gray-600">
-                        <a href="tel:+79203226263" class="flex items-center gap-4 hover:text-sage-green transition group">
-                            <div class="w-12 h-12 bg-sage-green/10 rounded-full flex items-center justify-center text-sage-green group-hover:bg-sage-green group-hover:text-white transition"><i class="fas fa-phone"></i></div>
-                            +7 (920) 322-62-63
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 glass p-8 md:p-12 rounded-[3rem] shadow-xl max-w-6xl mx-auto">
+                <div class="flex flex-col justify-center space-y-8">
+                    <div class="space-y-2">
+                        <h3 class="text-3xl font-handwritten text-gray-800">Контакты</h3>
+                        <p class="text-gray-500 text-sm">Мы всегда рады ответить на вопросы</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <a href="tel:+79203226263" class="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/50 transition group border border-transparent hover:border-white/40">
+                            <div class="w-12 h-12 bg-sage-green/20 rounded-full flex items-center justify-center text-sage-dark"><i class="fas fa-phone"></i></div>
+                            <span class="text-lg text-gray-700 font-medium">+7 (920) 322-62-63</span>
                         </a>
-                        <a href="https://wa.me/79203226263" target="_blank" class="flex items-center gap-4 hover:text-sage-green transition group">
-                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 group-hover:bg-green-500 group-hover:text-white transition"><i class="fab fa-whatsapp"></i></div>
-                            Написать в WhatsApp
+                        <a href="https://wa.me/79203226263" target="_blank" class="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/50 transition group border border-transparent hover:border-white/40">
+                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600"><i class="fab fa-whatsapp"></i></div>
+                            <span class="text-lg text-gray-700 font-medium">WhatsApp</span>
                         </a>
-                        <a href="https://t.me/Taniko_67" target="_blank" class="flex items-center gap-4 hover:text-sage-green transition group">
-                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition"><i class="fab fa-telegram-plane"></i></div>
-                            Написать в Telegram
+                        <a href="https://t.me/Taniko_67" target="_blank" class="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/50 transition group border border-transparent hover:border-white/40">
+                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-500"><i class="fab fa-telegram-plane"></i></div>
+                            <span class="text-lg text-gray-700 font-medium">Telegram</span>
                         </a>
-                        <a href="https://vk.com/shalfeyart" target="_blank" class="flex items-center gap-4 hover:text-sage-green transition group">
-                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 group-hover:bg-blue-700 group-hover:text-white transition"><i class="fab fa-vk"></i></div>
-                            Группа ВКонтакте
+                        <a href="https://vk.com/shalfeyart" target="_blank" class="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/50 transition group border border-transparent hover:border-white/40">
+                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-700"><i class="fab fa-vk"></i></div>
+                            <span class="text-lg text-gray-700 font-medium">ВКонтакте</span>
                         </a>
                     </div>
                 </div>
-                <form id="contact-form" class="space-y-4 bg-gray-50 p-6 rounded-2xl" onsubmit="submitOrder(event, 'contact-form', 'contact')">
-                    <h3 class="text-2xl font-handwritten text-gray-800 mb-4">Есть вопрос? Напишите нам!</h3>
-                    <input name="name" placeholder="Как к вам обращаться?" required class="w-full p-4 rounded-xl border border-gray-200 focus:ring-2 ring-sage-green outline-none bg-white">
-                    <input name="email" placeholder="Ваш контакт для связи" required class="w-full p-4 rounded-xl border border-gray-200 focus:ring-2 ring-sage-green outline-none bg-white">
-                    <textarea name="message" rows="5" placeholder="Ваше сообщение..." required class="w-full p-4 rounded-xl border border-gray-200 focus:ring-2 ring-sage-green outline-none bg-white"></textarea>
-                    <button type="submit" class="w-full bg-sage-green text-white font-bold py-4 rounded-xl hover:shadow-lg transition">Отправить сообщение</button>
+                
+                <form class="space-y-4 bg-white/40 backdrop-blur-md p-8 rounded-3xl border border-white/40 shadow-inner" onsubmit="window.openOrderModal('Вопрос из контактов', 'Сообщение'); return false;">
+                    <h3 class="text-2xl font-handwritten text-gray-800 mb-2">Напишите нам</h3>
+                    <input type="text" placeholder="Ваше имя" class="w-full glass-input p-4 rounded-xl outline-none transition placeholder-gray-400 text-gray-700">
+                    <textarea rows="4" placeholder="Ваше сообщение..." class="w-full glass-input p-4 rounded-xl outline-none transition placeholder-gray-400 text-gray-700"></textarea>
+                    <button type="submit" class="w-full bg-sage-green text-white font-bold py-4 rounded-xl hover:shadow-lg hover:bg-opacity-90 transition transform active:scale-95">Отправить</button>
                 </form>
             </div>
         </section>
 
     </main>
 
-    <footer class="bg-gray-800 text-white mt-20 py-10">
+    <!-- Footer -->
+    <footer class="mt-20 py-12 glass border-t border-white/20 relative">
         <div class="container mx-auto px-6 text-center">
-            <p class="font-handwritten text-3xl mb-4 text-sage-green">Шалфей</p>
-            <p class="text-gray-400 text-sm">Творческая мастерская. Создаем с любовью.</p>
-            <p class="text-gray-600 text-xs mt-8">&copy; 2024 Shalfey Art.</p>
+            <p class="font-handwritten text-4xl mb-4 text-sage-dark">Шалфей</p>
+            <p class="text-gray-500 text-sm">Творческая мастерская © 2024</p>
         </div>
     </footer>
 
-    <!-- Notification Toast -->
-    <div id="notification" class="fixed bottom-8 right-8 bg-white border-l-4 border-sage-green text-gray-800 px-6 py-4 rounded-lg shadow-2xl translate-y-32 opacity-0 transition-all duration-500 z-[100] flex items-center gap-4">
+    <!-- ORDER MODAL -->
+    <div id="order-modal" class="fixed inset-0 z-[100] hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeOrderModal()"></div>
+        <div class="glass w-full max-w-md p-8 rounded-3xl shadow-2xl relative transform scale-95 transition-all duration-300 border border-white/60 bg-white/80">
+            <button onclick="closeOrderModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"><i class="fas fa-times text-xl"></i></button>
+            
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-sage-green/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-leaf text-2xl text-sage-green"></i>
+                </div>
+                <h3 class="text-3xl font-handwritten font-bold text-gray-800">Ваш заказ</h3>
+                <p id="modal-product-title" class="text-sage-dark font-medium mt-1">Название товара</p>
+            </div>
+
+            <form id="modal-order-form" onsubmit="submitOrderFromModal(event)" class="space-y-4">
+                <input type="hidden" name="costume"> <!-- Сюда пишется название -->
+                
+                <div>
+                    <input name="name" required placeholder="Как к вам обращаться?" class="w-full glass-input p-4 rounded-xl outline-none transition">
+                </div>
+                <div>
+                    <input name="phone" required placeholder="Телефон или Telegram" class="w-full glass-input p-4 rounded-xl outline-none transition">
+                </div>
+                <div>
+                    <textarea name="message" rows="2" placeholder="Комментарий (дата, размер, пожелания)" class="w-full glass-input p-4 rounded-xl outline-none transition resize-none"></textarea>
+                </div>
+                
+                <button type="submit" class="w-full bg-sage-green text-white font-bold py-4 rounded-xl hover:shadow-lg hover:bg-opacity-90 transition transform active:scale-95 text-lg">
+                    Отправить заявку
+                </button>
+                <p class="text-xs text-center text-gray-400 mt-2">Мы свяжемся с вами для уточнения деталей</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="notification" class="fixed bottom-8 right-8 glass bg-white/90 border-l-4 border-sage-green text-gray-800 px-6 py-4 rounded-xl shadow-2xl translate-y-32 opacity-0 transition-all duration-500 z-[110] flex items-center gap-4">
         <div class="text-sage-green text-2xl"><i class="fas fa-check-circle"></i></div>
         <div>
             <h4 class="font-bold text-sm uppercase text-gray-500">Уведомление</h4>
-            <span id="notif-text" class="font-medium">Текст уведомления</span>
+            <span id="notif-text" class="font-medium text-sm">Текст уведомления</span>
         </div>
     </div>
 
     <script>
-        // Navigation Logic
+        // UI Logic
         const pages = document.querySelectorAll('.page-section');
         const navLinks = document.querySelectorAll('.nav-link');
         const mobileMenu = document.getElementById('mobile-menu');
         const preloader = document.getElementById('preloader');
 
-        // Hide preloader
         window.onload = () => {
-            setTimeout(() => { preloader.classList.add('hidden'); }, 2500);
+            setTimeout(() => { preloader.classList.add('hidden'); }, 1500);
         };
 
         function showPage(pageId) {
@@ -522,7 +594,7 @@
             }
 
             mobileMenu.classList.add('hidden');
-            window.scrollTo(0,0);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             
             const container = document.getElementById(pageId);
             runAnimations(container);
@@ -532,7 +604,7 @@
             mobileMenu.classList.toggle('hidden');
         });
 
-        // Sliders Logic
+        // Sliders
         function initializeCardSliders() {
             document.querySelectorAll('.card-slider-container').forEach(container => {
                 if(container.dataset.init) return;
