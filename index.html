@@ -6,22 +6,20 @@
     <title>Шалфей — Творческая мастерская</title>
     <link rel="icon" href="https://raw.githubusercontent.com/ShalfeyArt/main/refs/heads/main/shalfey.ico" type="image/x-icon">
     
-    <!-- Подключение Tailwind CSS -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Шрифты -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     
     <!-- Иконки -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-    <!-- Firebase SDK (Modular) -->
+    <!-- Firebase SDK -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, getDoc, doc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA8roOb63vM_ZaBt11x8B1b132gQBiG29A",
@@ -37,15 +35,14 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // Авторизация для доступа к БД
+        // Инициализация
         signInAnonymously(auth).then(() => {
-            console.log("Connected to Firebase anonymously");
-            loadContent();
-        }).catch((error) => {
-            console.error("Auth Error", error);
-        });
+            console.log("Firebase Connected");
+            loadContent(); // Загрузка товаров
+            loadMyOrders(); // Загрузка моих заявок
+        }).catch((error) => console.error("Auth Error", error));
 
-        // Функция загрузки контента
+        // 1. ЗАГРУЗКА ТОВАРОВ
         async function loadContent() {
             const sections = ['rentals', 'workshops', 'handmade'];
             
@@ -53,18 +50,18 @@
                 const container = document.getElementById(`${section}-container`);
                 if (!container) continue;
 
-                // Очистка контейнера (кроме статических элементов, если есть)
                 container.innerHTML = '<div class="col-span-full text-center py-10"><i class="fas fa-spinner fa-spin text-3xl text-sage-green"></i></div>';
 
                 try {
-                    const q = query(collection(db, "products"), where("category", "==", section)); // Можно добавить orderBy("createdAt") если добавить поле даты
+                    // Запрос к БД
+                    const q = query(collection(db, "products"), where("category", "==", section));
                     const querySnapshot = await getDocs(q);
                     
-                    container.innerHTML = ''; // Убираем спиннер
+                    container.innerHTML = ''; 
 
                     if (querySnapshot.empty) {
-                        container.innerHTML = '<div class="col-span-full text-center text-gray-500 italic">В этом разделе пока пусто...</div>';
-                        return;
+                        container.innerHTML = '<div class="col-span-full text-center text-gray-500 italic py-10">В этом разделе пока пусто...</div>';
+                        continue;
                     }
 
                     querySnapshot.forEach((doc) => {
@@ -73,116 +70,30 @@
                         container.insertAdjacentHTML('beforeend', cardHTML);
                     });
 
-                    // Инициализация слайдеров после добавления элементов в DOM
-                    initializeCardSliders();
-                    // Инициализация анимации появления
-                    runAnimations(container);
+                    // Инициализируем слайдеры только после добавления HTML
+                    setTimeout(() => {
+                        initializeCardSliders();
+                        runAnimations(container);
+                    }, 100);
 
                 } catch (error) {
                     console.error(`Error loading ${section}:`, error);
-                    container.innerHTML = '<div class="col-span-full text-center text-red-400">Не удалось загрузить данные. Проверьте соединение.</div>';
+                    container.innerHTML = '<div class="col-span-full text-center text-red-400">Ошибка загрузки данных.</div>';
                 }
             }
         }
 
-        // Генерация HTML карточки
-        function createCardHTML(item, type) {
-            // Обработка изображений (массив или строка)
-            let images = Array.isArray(item.images) ? item.images : [item.images || 'https://via.placeholder.com/400x500?text=No+Image'];
-            if (images.length === 0) images = ['https://via.placeholder.com/400x500?text=No+Image'];
-
-            // Слайды
-            const slidesHTML = images.map((img, index) => 
-                `<div class="slide ${index === 0 ? 'active' : ''}"><img src="${img}" alt="${item.title}" class="w-full h-full object-cover"></div>`
-            ).join('');
-
-            // Точки навигации
-            const dotsHTML = images.length > 1 ? `
-                <div class="dots-container flex justify-center space-x-2 mb-4">
-                    ${images.map((_, index) => `<button class="dot w-2.5 h-2.5 bg-gray-300 rounded-full ${index === 0 ? 'active' : ''}"></button>`).join('')}
-                </div>` : '<div class="mb-4"></div>'; // Пустой блок для отступа
-
-            // Кнопки навигации
-            const navButtonsHTML = images.length > 1 ? `
-                <button class="slider-prev absolute top-1/2 left-2 transform -translate-y-1/2 bg-white/60 hover:bg-white rounded-full p-2 shadow-md transition z-10"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
-                <button class="slider-next absolute top-1/2 right-2 transform -translate-y-1/2 bg-white/60 hover:bg-white rounded-full p-2 shadow-md transition z-10"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></button>
-            ` : '';
-
-            // Цена и действие
-            let priceBlock = '';
-            let actionButton = '';
-
-            if (type === 'rentals') {
-                priceBlock = `
-                    <div class="mt-4">
-                        <p class="text-lg font-bold text-sage-green">Стоимость аренды:</p>
-                        <p class="text-gray-600">${item.price}</p>
-                    </div>`;
-            } else if (type === 'workshops') {
-                priceBlock = `<p class="font-bold text-xl text-sage-green mt-3">Стоимость: ${item.price} руб.</p>`;
-                actionButton = `<button class="mt-4 bg-sage-green text-white font-bold py-2 px-6 rounded-lg hover:bg-opacity-90 transition-colors" onclick="window.prepareOrder('${item.title}', 'Мастер-класс')">Записаться</button>`;
-            } else {
-                priceBlock = `<p class="mt-4 text-xl font-bold text-sage-green">Цена: ${item.price} руб.</p>`;
-            }
-
-            // Обертка отличается для Workshops (горизонтальная) и остальных (вертикальная)
-            if (type === 'workshops') {
-                return `
-                <div data-animate="fade-up" class="flex flex-col md:flex-row items-center gap-8 bg-white p-8 rounded-lg shadow-md mb-8">
-                    <div class="w-full md:w-1/3 h-64 relative rounded-lg overflow-hidden group">
-                         <div class="card-slider-container w-full h-full" data-slider-id="${Math.random().toString(36).substr(2, 9)}">
-                            ${slidesHTML}
-                            ${navButtonsHTML}
-                         </div>
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="text-3xl font-handwritten text-gray-800">${item.title}</h3>
-                        <p class="text-gray-600 my-3">${item.description}</p>
-                        ${priceBlock}
-                        ${actionButton}
-                    </div>
-                </div>`;
-            } else {
-                return `
-                <div data-animate="zoom-in" class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col h-full">
-                    <div class="card-slider-container h-80 relative" data-slider-id="${Math.random().toString(36).substr(2, 9)}">
-                        ${slidesHTML}
-                        ${navButtonsHTML}
-                    </div>
-                    <div class="p-6 flex flex-col flex-grow">
-                        ${dotsHTML}
-                        <h4 class="text-2xl font-handwritten font-bold text-gray-800">${item.title}</h4>
-                        <p class="text-gray-600 mt-2 flex-grow">${item.description}</p>
-                        ${priceBlock}
-                    </div>
-                </div>`;
-            }
-        }
-
-        // Глобальная функция для открытия формы заказа (для кнопок)
-        window.prepareOrder = (title, type) => {
-            // Скролл к форме контактов или открытие модалки (здесь используем скролл к форме аренды как универсальной или создадим скрытые поля)
-            const rentalSection = document.getElementById('rentals');
-            showPage('rentals'); // Переключаем на вкладку с формой
-            
-            // Заполняем поле "Костюм" или создаем универсальное поле
-            const costumeInput = document.querySelector('input[name="costume"]');
-            if(costumeInput) {
-                costumeInput.value = `${type}: ${title}`;
-                costumeInput.focus();
-            }
-        };
-
-        // Отправка заказа в Firestore
+        // 2. ОТПРАВКА ЗАКАЗА
         window.submitOrder = async (event, formId, type) => {
             event.preventDefault();
             const form = document.getElementById(formId);
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
             
-            data.type = type; // 'rentals' или 'contact'
+            data.type = type;
             data.status = 'new';
             data.createdAt = new Date().toISOString();
+            data.adminReply = ""; // Поле для ответа админа
 
             const btn = form.querySelector('button[type="submit"]');
             const originalText = btn.innerText;
@@ -191,419 +102,478 @@
 
             try {
                 // Сохраняем в Firebase
-                await addDoc(collection(db, "orders"), data);
+                const docRef = await addDoc(collection(db, "orders"), data);
                 
-                // Показываем уведомление
-                showNotification("Ваша заявка успешно отправлена! Мы скоро свяжемся с вами.");
-                
-                // Опционально: Отправка в телеграм (как раньше)
-                // const tgMessage = `Новый заказ (${type}):\n${JSON.stringify(data, null, 2)}`;
-                // redirectToTelegram(tgMessage);
+                // === СОХРАНЯЕМ ID ЛОКАЛЬНО ===
+                saveOrderLocally(docRef.id);
 
+                showNotification("Заявка отправлена! Ответ смотрите во вкладке 'Мои заявки'.");
                 form.reset();
+                
+                // Сразу обновляем список
+                loadMyOrders(); 
+
             } catch (e) {
-                console.error("Ошибка при отправке заказа: ", e);
-                showNotification("Произошла ошибка. Попробуйте написать нам в WhatsApp.");
+                console.error("Ошибка: ", e);
+                showNotification("Ошибка при отправке. Попробуйте позже.");
             } finally {
                 btn.innerText = originalText;
                 btn.disabled = false;
             }
         };
 
-        // Экспорт функций слайдера для доступа из loadContent
+        function saveOrderLocally(orderId) {
+            let myOrders = JSON.parse(localStorage.getItem('shalfey_orders') || '[]');
+            myOrders.push(orderId);
+            localStorage.setItem('shalfey_orders', JSON.stringify(myOrders));
+        }
+
+        // 3. ЗАГРУЗКА "МОИ ЗАЯВКИ"
+        window.loadMyOrders = async () => {
+            const container = document.getElementById('my-orders-list');
+            if(!container) return;
+
+            const myOrdersIds = JSON.parse(localStorage.getItem('shalfey_orders') || '[]');
+            
+            if (myOrdersIds.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500 py-6 bg-white rounded-lg shadow-sm">Вы еще не оставляли заявок с этого устройства.</div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-sage-green"></i> Проверка статусов...</div>';
+            
+            let html = '';
+            // Проходим по сохраненным ID и грузим свежие данные
+            // (В реверсе, чтобы новые были сверху)
+            for (let i = myOrdersIds.length - 1; i >= 0; i--) {
+                const id = myOrdersIds[i];
+                try {
+                    const docSnap = await getDoc(doc(db, "orders", id));
+                    if (docSnap.exists()) {
+                        const order = docSnap.data();
+                        const date = new Date(order.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+                        
+                        let statusBadge = '';
+                        let statusColor = '';
+                        
+                        if (order.status === 'new') {
+                            statusBadge = 'В обработке';
+                            statusColor = 'bg-yellow-100 text-yellow-700';
+                        } else if (order.status === 'answered') {
+                            statusBadge = 'Есть ответ!';
+                            statusColor = 'bg-blue-100 text-blue-700 font-bold';
+                        } else if (order.status === 'done') {
+                            statusBadge = 'Завершено';
+                            statusColor = 'bg-green-100 text-green-700';
+                        }
+
+                        html += `
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-4 transition hover:shadow-md animate-fade-in">
+                            <div class="flex flex-wrap justify-between items-start gap-2 mb-3">
+                                <h4 class="font-bold text-xl text-gray-800">${order.costume || 'Сообщение'}</h4>
+                                <span class="${statusColor} text-xs px-3 py-1 rounded-full uppercase tracking-wider">${statusBadge}</span>
+                            </div>
+                            <div class="text-sm text-gray-400 mb-4 flex items-center gap-2">
+                                <i class="far fa-clock"></i> ${date}
+                            </div>
+                            
+                            <!-- Ответ администратора -->
+                            ${order.adminReply ? `
+                                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 relative">
+                                    <div class="absolute top-0 left-4 -translate-y-1/2 bg-blue-100 text-blue-600 px-2 py-0.5 rounded text-xs font-bold">Ответ Шалфея</div>
+                                    <p class="text-gray-800 mt-2">${order.adminReply}</p>
+                                </div>
+                            ` : `
+                                <div class="text-sm text-gray-500 italic">Ожидайте ответа администратора...</div>
+                            `}
+                        </div>`;
+                    }
+                } catch (e) {
+                    console.error("Err loading order", id);
+                }
+            }
+            container.innerHTML = html || '<div class="text-center text-gray-500">История пуста</div>';
+        };
+
+
+        // --- КАРТОЧКИ ---
+        function createCardHTML(item, type) {
+            let images = Array.isArray(item.images) ? item.images : [item.images || 'https://via.placeholder.com/400x500'];
+            if(images.length === 0 || !images[0]) images = ['https://via.placeholder.com/400x500?text=No+Image'];
+
+            const slidesHTML = images.map((img, index) => 
+                `<div class="slide ${index === 0 ? 'active' : ''}"><img src="${img}" class="w-full h-full object-cover"></div>`
+            ).join('');
+
+            const navHTML = images.length > 1 ? `
+                <button class="slider-prev absolute left-2 top-1/2 -translate-y-1/2 bg-white/70 p-2 rounded-full shadow hover:bg-white z-10 w-8 h-8 flex items-center justify-center"><i class="fas fa-chevron-left"></i></button>
+                <button class="slider-next absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 p-2 rounded-full shadow hover:bg-white z-10 w-8 h-8 flex items-center justify-center"><i class="fas fa-chevron-right"></i></button>
+            ` : '';
+
+            let actionBtn = '';
+            if (type === 'rentals') actionBtn = `<button onclick="window.prepareOrder('${item.title}', 'Аренда')" class="mt-4 w-full border-2 border-sage-green text-sage-green hover:bg-sage-green hover:text-white py-2 rounded-lg transition font-bold">Забронировать</button>`;
+            else if (type === 'workshops') actionBtn = `<button onclick="window.prepareOrder('${item.title}', 'МК')" class="mt-4 bg-sage-green text-white font-bold py-2 px-6 rounded-lg hover:opacity-90 transition shadow-lg shadow-green-100">Записаться</button>`;
+            
+            const price = `<p class="text-xl font-bold text-sage-green mt-2">${item.price}</p>`;
+
+            // Разный дизайн для МК и остальных
+            if(type === 'workshops') {
+                 return `
+                <div data-animate="fade-up" class="flex flex-col md:flex-row gap-8 bg-white p-6 md:p-8 rounded-2xl shadow-md mb-8 hover:shadow-xl transition-shadow duration-300">
+                    <div class="w-full md:w-1/3 h-64 relative rounded-xl overflow-hidden card-slider-container bg-gray-100">
+                        ${slidesHTML} ${navHTML}
+                    </div>
+                    <div class="flex-1 flex flex-col justify-center">
+                        <h3 class="text-3xl font-handwritten font-bold text-gray-800 mb-2">${item.title}</h3>
+                        <p class="text-gray-600 mb-4 leading-relaxed">${item.description}</p>
+                        ${price}
+                        <div class="mt-2">${actionBtn}</div>
+                    </div>
+                </div>`;
+            }
+
+            return `
+            <div data-animate="zoom-in" class="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col h-full group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                <div class="h-80 relative card-slider-container bg-gray-100">
+                    ${slidesHTML} ${navHTML}
+                </div>
+                <div class="p-6 flex flex-col flex-grow">
+                    <h4 class="text-2xl font-handwritten font-bold text-gray-800 mb-2">${item.title}</h4>
+                    <p class="text-gray-600 text-sm mb-4 flex-grow line-clamp-4">${item.description}</p>
+                    <div class="mt-auto pt-4 border-t border-gray-100">
+                        ${price}
+                        ${actionBtn}
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        window.prepareOrder = (title, type) => {
+            showPage('rentals'); // Открываем вкладку с формой
+            setTimeout(() => {
+                 const input = document.querySelector('input[name="costume"]');
+                if(input) {
+                    input.value = `${type}: ${title}`;
+                    input.scrollIntoView({behavior: "smooth", block: "center"});
+                    input.focus();
+                }
+            }, 500);
+        };
+
         window.initializeCardSliders = initializeCardSliders;
         window.runAnimations = runAnimations;
 
     </script>
 
     <style>
-        /* Стили из оригинала */
         html { scroll-behavior: smooth; }
         body { font-family: 'Inter', sans-serif; background-color: #FBF9F6; color: #4A4A4A; }
-        h1, h2, h3, h4, h5, h6, .font-handwritten { font-family: 'Caveat', cursive; }
-        .sage-green { color: #8A9A5B; }
+        h1, h2, h3, h4, .font-handwritten { font-family: 'Caveat', cursive; }
+        .text-sage-green { color: #8A9A5B; }
         .bg-sage-green { background-color: #8A9A5B; }
-        .border-sage-green { border-color: #8A9A5B; }
-        .lavender { color: #E6E6FA; }
         .bg-lavender-light { background-color: #F5F5FD; }
-        .nav-link.active { color: #8A9A5B; font-weight: bold; border-bottom: 2px solid #8A9A5B; }
-        .page-section { display: none; animation: fadeIn 0.8s; }
+        
+        .nav-link.active { color: #8A9A5B; font-weight: bold; position: relative; }
+        .nav-link.active::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 100%; height: 2px; background: #8A9A5B; border-radius: 2px; }
+        
+        .page-section { display: none; animation: fadeIn 0.6s ease-out; }
         .page-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        [data-animate] { opacity: 0; transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Sliders */
+        .card-slider-container .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.5s ease-in-out; z-index: 1; }
+        .card-slider-container .slide.active { opacity: 1; z-index: 2; }
+        
+        /* Animations */
+        [data-animate] { opacity: 0; transition: 0.8s ease-out; }
         .is-visible { opacity: 1; transform: none !important; }
         [data-animate="fade-up"] { transform: translateY(40px); }
-        [data-animate="zoom-in"] { transform: scale(0.9); }
-        #notification-modal { transition: opacity 0.3s ease, visibility 0.3s ease; }
+        [data-animate="zoom-in"] { transform: scale(0.95); }
+
+        /* Preloader */
         #preloader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a1a; z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.8s ease, visibility 0.8s ease; }
         #preloader.hidden { opacity: 0; visibility: hidden; }
-        #preloader-logo { width: 200px; height: auto; }
         #preloader-logo .sage-path { stroke-dasharray: 1500; stroke-dashoffset: 1500; animation: draw 3.5s ease-in-out forwards; }
         @keyframes draw { to { stroke-dashoffset: 0; } }
-        #mobile-menu-button { width: 30px; height: 24px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; position: relative; background: transparent; border: none; }
-        .burger-line { width: 100%; height: 3px; background-color: #4A4A4A; border-radius: 3px; transition: all 0.3s ease-in-out; }
-        #mobile-menu-button.open .burger-line-1 { transform: rotate(45deg) translate(7px, 7px); }
-        #mobile-menu-button.open .burger-line-2 { opacity: 0; }
-        #mobile-menu-button.open .burger-line-3 { transform: rotate(-45deg) translate(7px, -7px); }
-        .dots-container .dot { transition: background-color 0.3s ease; }
-        .dots-container .dot.active { background-color: #8A9A5B; }
-        .card-slider-container .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.4s ease-in-out; visibility: hidden; }
-        .card-slider-container .slide.active { opacity: 1; visibility: visible; }
     </style>
 </head>
 <body class="antialiased">
 
     <!-- Preloader -->
     <div id="preloader">
-        <svg id="preloader-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <svg id="preloader-logo" width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
             <path class="sage-path" d="M100 180 V 50 M100 130 C75 125 75 155 100 150 M100 130 C125 125 125 155 100 150 M100 100 C80 95 80 120 100 115 M100 100 C120 95 120 120 100 115 M100 75 C90 70 90 90 100 85 M100 75 C110 70 110 90 100 85 M80 160 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 M120,165 a4,4 0 1,0 -8,0 a4,4 0 1,0 8,0 M75 90 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
     </div>
 
     <!-- Header -->
-    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+    <header class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50">
         <div class="container mx-auto px-6 py-3 flex justify-between items-center">
-            <a href="#" class="flex items-center gap-3" onclick="showPage('home')">
-                <div class="h-12 w-12 rounded-full bg-white flex items-center justify-center shadow-md overflow-hidden">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/2499.jpg" alt="Логотип Шалфей" class="h-full w-full object-cover">
+            <a href="#" class="flex items-center gap-3 group" onclick="showPage('home')">
+                <div class="h-12 w-12 rounded-full bg-white flex items-center justify-center shadow-md overflow-hidden border-2 border-transparent group-hover:border-sage-green transition">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/2499.jpg" alt="Логотип" class="h-full w-full object-cover">
                 </div>
                 <span class="text-3xl font-handwritten text-sage-green font-bold">Шалфей</span>
             </a>
             
-            <nav class="hidden md:flex space-x-8 items-center">
-                <a href="#" class="nav-link text-gray-600 hover:text-sage-green transition duration-300" onclick="showPage('home')">Главная</a>
-                <a href="#" class="nav-link text-gray-600 hover:text-sage-green transition duration-300" onclick="showPage('rentals')">Аренда костюмов</a>
-                <a href="#" class="nav-link text-gray-600 hover:text-sage-green transition duration-300" onclick="showPage('workshops')">Мастер-классы</a>
-                <a href="#" class="nav-link text-gray-600 hover:text-sage-green transition duration-300" onclick="showPage('handmade')">Изделия</a>
-                <a href="#" class="nav-link text-gray-600 hover:text-sage-green transition duration-300" onclick="showPage('about')">О нас</a>
-                <a href="#" class="nav-link text-gray-600 hover:text-sage-green transition duration-300" onclick="showPage('contacts')">Контакты</a>
+            <nav class="hidden lg:flex space-x-8 items-center">
+                <a href="#" class="nav-link text-gray-600 hover:text-sage-green transition" onclick="showPage('home')">Главная</a>
+                <a href="#" class="nav-link text-gray-600 hover:text-sage-green transition" onclick="showPage('rentals')">Аренда</a>
+                <a href="#" class="nav-link text-gray-600 hover:text-sage-green transition" onclick="showPage('workshops')">Мастер-классы</a>
+                <a href="#" class="nav-link text-gray-600 hover:text-sage-green transition" onclick="showPage('handmade')">Изделия</a>
+                <a href="#" class="nav-link text-gray-600 hover:text-sage-green transition" onclick="showPage('contacts')">Контакты</a>
+                <!-- Кнопка Мои Заявки -->
+                <button onclick="showPage('my-orders')" class="bg-sage-green text-white px-5 py-2 rounded-full font-bold hover:bg-opacity-90 transition shadow-lg shadow-green-100 flex items-center gap-2">
+                    <i class="fas fa-inbox"></i> Мои заявки
+                </button>
             </nav>
 
-            <div class="md:hidden">
-                <button id="mobile-menu-button" class="focus:outline-none">
-                    <span class="burger-line burger-line-1"></span>
-                    <span class="burger-line burger-line-2"></span>
-                    <span class="burger-line burger-line-3"></span>
-                </button>
-            </div>
+            <button id="mobile-menu-btn" class="lg:hidden text-gray-700 focus:outline-none p-2">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
         </div>
 
-        <div id="mobile-menu" class="hidden md:hidden bg-white/95 backdrop-blur-md">
-            <a href="#" class="block py-3 px-6 text-gray-700 hover:bg-sage-green/10" onclick="showPage('home')">Главная</a>
-            <a href="#" class="block py-3 px-6 text-gray-700 hover:bg-sage-green/10" onclick="showPage('rentals')">Аренда костюмов</a>
-            <a href="#" class="block py-3 px-6 text-gray-700 hover:bg-sage-green/10" onclick="showPage('workshops')">Мастер-классы</a>
-            <a href="#" class="block py-3 px-6 text-gray-700 hover:bg-sage-green/10" onclick="showPage('handmade')">Изделия</a>
-            <a href="#" class="block py-3 px-6 text-gray-700 hover:bg-sage-green/10" onclick="showPage('about')">О нас</a>
-            <a href="#" class="block py-3 px-6 text-gray-700 hover:bg-sage-green/10" onclick="showPage('contacts')">Контакты</a>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden lg:hidden bg-white border-t absolute w-full left-0 top-full shadow-lg">
+            <a href="#" class="block py-4 px-6 hover:bg-gray-50 border-b border-gray-100" onclick="showPage('home')">Главная</a>
+            <a href="#" class="block py-4 px-6 hover:bg-gray-50 border-b border-gray-100" onclick="showPage('rentals')">Аренда</a>
+            <a href="#" class="block py-4 px-6 hover:bg-gray-50 border-b border-gray-100" onclick="showPage('workshops')">Мастер-классы</a>
+            <a href="#" class="block py-4 px-6 hover:bg-gray-50 border-b border-gray-100" onclick="showPage('handmade')">Изделия</a>
+            <a href="#" class="block py-4 px-6 hover:bg-gray-50 border-b border-gray-100" onclick="showPage('contacts')">Контакты</a>
+            <a href="#" class="block py-4 px-6 text-sage-green font-bold bg-sage-green/5" onclick="showPage('my-orders')"><i class="fas fa-inbox mr-2"></i>Мои заявки</a>
         </div>
     </header>
 
-    <main class="container mx-auto px-6 py-8 md:py-12 overflow-x-hidden">
+    <main class="container mx-auto px-4 py-8 md:py-12 min-h-screen">
 
         <!-- Home -->
-        <section id="home" class="page-section">
-            <div class="text-center mb-16">
-                <h1 data-animate="fade-up" class="text-5xl md:text-7xl font-bold text-sage-green mb-4">Место, где природа, волшебство и творчество встречаются</h1>
-                <p data-animate="fade-up" data-delay="100" class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">«Шалфей» — это не просто мастерская. Это пространство для души, где мы создаем уникальные костюмы, проводим душевные мастер-классы, выращиваем растения и творим красоту своими руками.</p>
+        <section id="home" class="page-section active">
+            <div class="text-center mb-16 animate-fade-in">
+                <h1 class="text-5xl md:text-7xl font-bold text-sage-green mb-6 font-handwritten">Место, где живет вдохновение</h1>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">«Шалфей» — это уютная мастерская души. Мы создаем костюмы для сказочных историй, проводим теплые мастер-классы и делимся магией ручной работы.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div data-animate="zoom-in" class="group relative overflow-hidden rounded-lg shadow-lg cursor-pointer" onclick="showPage('rentals')">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/kostum%20krasny%20plasch%20eshe%20photo.jpg" alt="Аренда" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
-                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        <h3 class="text-white text-3xl font-handwritten font-bold">Аренда костюмов</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 px-2">
+                <div onclick="showPage('rentals')" class="cursor-pointer group relative h-80 rounded-2xl overflow-hidden shadow-lg transform hover:-translate-y-2 transition duration-500">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/kostum%20krasny%20plasch%20eshe%20photo.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
+                    <div class="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition">
+                        <h3 class="text-white text-4xl font-handwritten font-bold drop-shadow-md">Аренда</h3>
                     </div>
                 </div>
-                <div data-animate="zoom-in" data-delay="100" class="group relative overflow-hidden rounded-lg shadow-lg cursor-pointer" onclick="showPage('workshops')">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" alt="МК" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
-                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        <h3 class="text-white text-3xl font-handwritten font-bold">Мастер-классы</h3>
+                <div onclick="showPage('workshops')" class="cursor-pointer group relative h-80 rounded-2xl overflow-hidden shadow-lg transform hover:-translate-y-2 transition duration-500">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
+                    <div class="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition">
+                        <h3 class="text-white text-4xl font-handwritten font-bold drop-shadow-md">Мастер-классы</h3>
                     </div>
                 </div>
-                <div data-animate="zoom-in" data-delay="300" class="group relative overflow-hidden rounded-lg shadow-lg cursor-pointer" onclick="showPage('handmade')">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kluchnitsa%20dlya%20kluchey%20vvide%20domikov.jpg" alt="Изделия" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
-                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        <h3 class="text-white text-3xl font-handwritten font-bold">Изделия ручной работы</h3>
+                <div onclick="showPage('handmade')" class="cursor-pointer group relative h-80 rounded-2xl overflow-hidden shadow-lg transform hover:-translate-y-2 transition duration-500">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kluchnitsa%20dlya%20kluchey%20vvide%20domikov.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
+                    <div class="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition">
+                        <h3 class="text-white text-4xl font-handwritten font-bold drop-shadow-md">Изделия</h3>
                     </div>
                 </div>
             </div>
-            
-            <div class="mt-20 bg-lavender-light p-8 md:p-12 rounded-lg" data-animate="fade-up">
-                 <h2 class="text-4xl md:text-5xl text-center font-handwritten text-sage-green mb-8">Атмосфера и отзывы</h2>
-                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                    <div class="bg-white p-6 rounded-lg shadow-sm">
-                        <p class="text-gray-600 italic">"Это было волшебно! Костюм превзошел все ожидания, а фотосессия получилась сказочной. Спасибо!"</p>
-                        <p class="mt-4 font-bold text-gray-800">- Анастасия</p>
-                    </div>
-                     <div class="bg-white p-6 rounded-lg shadow-sm">
-                        <p class="text-gray-600 italic">"Мастер-класс по созданию шкатулки — лучший способ провести выходной. Уютно, творчески и очень душевно."</p>
-                        <p class="mt-4 font-bold text-gray-800">- Елена</p>
-                    </div>
-                     <div class="bg-white p-6 rounded-lg shadow-sm">
-                        <p class="text-gray-600 italic">"Заказывала ключницу в подарок. Идеальное исполнение и столько тепла в одной маленькой вещице. Благодарю!"</p>
-                        <p class="mt-4 font-bold text-gray-800">- Мария</p>
-                    </div>
-                 </div>
+
+            <div class="mt-20 bg-lavender-light p-10 rounded-3xl text-center shadow-inner" data-animate="fade-up">
+                 <h2 class="text-4xl font-handwritten text-sage-green mb-4">О нас говорят</h2>
+                 <p class="text-xl italic text-gray-600 max-w-2xl mx-auto">"Это было волшебно! Костюм превзошел все ожидания, а атмосфера в мастерской заставляет возвращаться снова и снова."</p>
             </div>
         </section>
 
         <!-- Rentals -->
         <section id="rentals" class="page-section">
             <div class="text-center mb-12">
-                <h2 data-animate="fade-up" class="text-5xl md:text-6xl font-handwritten text-sage-green">Аренда костюмов</h2>
-                <p data-animate="fade-up" data-delay="100" class="text-lg text-gray-600 mt-2">Выберите образ для вашей фотосессии, праздника или фестиваля.</p>
+                <h2 class="text-5xl md:text-6xl font-handwritten text-sage-green mb-4">Аренда образов</h2>
+                <p class="text-gray-500">Для фотосессий, праздников и фестивалей</p>
             </div>
             
-            <!-- ДИНАМИЧЕСКИЙ КОНТЕЙНЕР ДЛЯ КОСТЮМОВ -->
-            <div id="rentals-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Сюда подгружаются карточки из Firebase -->
+            <div id="rentals-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+                <!-- Сюда грузятся товары -->
             </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mt-16 bg-lavender-light p-8 md:p-12 rounded-lg" data-animate="fade-up">
-                <div>
-                    <h3 class="text-3xl font-handwritten text-sage-green mb-4">Условия аренды</h3>
-                    <ul class="space-y-3 text-gray-700">
-                        <li><i class="fas fa-check-circle text-sage-green mr-2"></i><strong>Залог:</strong> 3000 руб.</li>
-                        <li><i class="fas fa-check-circle text-sage-green mr-2"></i><strong>Примерка:</strong> Бесплатная, по записи.</li>
-                        <li><i class="fas fa-check-circle text-sage-green mr-2"></i><strong>Возврат:</strong> В чистом виде.</li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="text-3xl font-handwritten text-sage-green mb-4">Заявка на аренду</h3>
-                    <form id="rental-form" class="space-y-4" onsubmit="submitOrder(event, 'rental-form', 'rentals')">
-                        <input name="name" type="text" placeholder="Ваше имя" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none">
-                        <input name="phone" type="tel" placeholder="Ваш телефон" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none">
-                        <input name="costume" type="text" placeholder="Название костюма" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none">
-                        <input name="dates" type="text" placeholder="Желаемые даты аренды" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none">
-                        <button type="submit" class="w-full bg-sage-green text-white font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors">Отправить заявку</button>
-                    </form>
-                </div>
+            
+            <div class="bg-white p-8 md:p-12 rounded-3xl shadow-xl max-w-4xl mx-auto border border-gray-100">
+                <h3 class="text-4xl font-handwritten text-sage-green mb-8 text-center">Забронировать костюм</h3>
+                <form id="rental-form" class="grid grid-cols-1 md:grid-cols-2 gap-6" onsubmit="submitOrder(event, 'rental-form', 'rentals')">
+                    <input name="name" type="text" placeholder="Ваше имя" required class="p-4 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 ring-sage-green outline-none transition">
+                    <input name="phone" type="tel" placeholder="Телефон" required class="p-4 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 ring-sage-green outline-none transition">
+                    <input name="costume" type="text" placeholder="Какой костюм вас интересует?" required class="md:col-span-2 p-4 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 ring-sage-green outline-none transition">
+                    <input name="dates" type="text" placeholder="Желаемая дата аренды" required class="md:col-span-2 p-4 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 ring-sage-green outline-none transition">
+                    <button type="submit" class="md:col-span-2 bg-sage-green text-white font-bold py-4 rounded-xl hover:shadow-lg hover:-translate-y-1 transition duration-300 text-lg">Отправить заявку</button>
+                </form>
             </div>
         </section>
 
         <!-- Workshops -->
         <section id="workshops" class="page-section">
             <div class="text-center mb-12">
-                <h2 data-animate="fade-up" class="text-5xl md:text-6xl font-handwritten text-sage-green">Творческие мастер-классы</h2>
-                <p data-animate="fade-up" data-delay="100" class="text-lg text-gray-600 mt-2">Погрузитесь в атмосферу творчества.</p>
+                <h2 class="text-5xl md:text-6xl font-handwritten text-sage-green mb-4">Мастер-классы</h2>
+                <p class="text-gray-500">Создавайте красоту своими руками</p>
             </div>
-            
-            <!-- ДИНАМИЧЕСКИЙ КОНТЕЙНЕР ДЛЯ МК -->
-            <div id="workshops-container" class="space-y-12">
-                <!-- Карточки МК -->
-            </div>
-
-            <div data-animate="fade-up" class="mt-16 text-center bg-lavender-light p-8 md:p-12 rounded-lg">
-                <h3 class="text-4xl font-handwritten text-sage-green">Мастер-класс на вашем празднике</h3>
-                <p class="text-gray-700 my-4 max-w-2xl mx-auto">Организуем выездной мастер-класс на девичник, день рождения или корпоратив.</p>
-                <button class="bg-white border-2 border-sage-green text-sage-green font-bold py-3 px-8 rounded-lg hover:bg-sage-green hover:text-white transition-colors" onclick="window.prepareOrder('Выездной МК', 'Спецзаказ')">Обсудить детали</button>
-            </div>
+            <div id="workshops-container" class="max-w-5xl mx-auto"></div>
         </section>
 
         <!-- Handmade -->
         <section id="handmade" class="page-section">
             <div class="text-center mb-12">
-                <h2 data-animate="fade-up" class="text-5xl md:text-6xl font-handwritten text-sage-green">Изделия ручной работы</h2>
-                <p data-animate="fade-up" data-delay="100" class="text-lg text-gray-600 mt-2">Уютные детали для вашего дома.</p>
+                <h2 class="text-5xl md:text-6xl font-handwritten text-sage-green mb-4">Ручная работа</h2>
+                <p class="text-gray-500">Уникальные изделия для уюта</p>
             </div>
-            
-            <!-- ДИНАМИЧЕСКИЙ КОНТЕЙНЕР ДЛЯ ИЗДЕЛИЙ -->
-            <div id="handmade-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                <!-- Карточки товаров -->
-            </div>
+            <div id="handmade-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+        </section>
 
-             <div data-animate="fade-up" class="mt-12 bg-lavender-light p-8 rounded-lg text-center">
-                <h3 class="text-3xl font-handwritten text-sage-green">Как заказать?</h3>
-                <p class="text-gray-700 mt-2">Все изделия уникальны. Свяжитесь с нами для заказа.</p>
-                <button class="mt-4 bg-sage-green text-white font-bold py-3 px-8 rounded-lg hover:bg-opacity-90 transition-colors" onclick="showPage('contacts')">Связаться с нами</button>
-            </div>
-        </section>
-        
-        <!-- About (Static) -->
-        <section id="about" class="page-section">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div data-animate="fade-up" class="space-y-6">
-                    <h2 class="text-5xl md:text-6xl font-handwritten text-sage-green">Наша история</h2>
-                    <p class="text-gray-700 leading-relaxed">Путь к "Шалфею" начался с двух, казалось бы, разных увлечений: дизайна и психологии. Я всегда любила создавать красоту — шить, рисовать, работать с деревом. Параллельно я изучала психологию, погружаясь в темы женских кругов, арт-терапии и силы природы.</p>
-                    <p class="text-gray-700 leading-relaxed">В какой-то момент эти два пути сошлись. Я поняла, что творчество — это не просто создание вещей, это способ самовыражения, медитация и исцеление.</p>
-                    <h3 class="text-3xl font-handwritten text-sage-green pt-4">Почему "Шалфей"?</h3>
-                    <p class="text-gray-700 leading-relaxed">Шалфей символизирует мудрость, здоровье и благополучие. Для нас это символ очищения пространства для нового, для творчества, для себя.</p>
+        <!-- NEW: My Orders Section -->
+        <section id="my-orders" class="page-section">
+            <div class="max-w-3xl mx-auto">
+                <div class="text-center mb-12">
+                    <h2 class="text-5xl md:text-6xl font-handwritten text-sage-green mb-4">Мои заявки</h2>
+                    <p class="text-gray-500">Отслеживайте статус ваших обращений и читайте ответы администратора</p>
                 </div>
-                <div data-animate="zoom-in" class="grid grid-cols-2 gap-4">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kostum%20krasny%20plasch%20eshe%20photo.jpg" alt="Photo 1" class="rounded-lg shadow-lg object-cover w-full h-full aspect-[4/5]">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/korzinka%20novogodnaya%20s%20elovimi%20vetochkamy%20i%20hlopok.jpg" alt="Photo 2" class="rounded-lg shadow-lg object-cover w-full h-full mt-8 aspect-[4/5]">
+                
+                <div id="my-orders-list" class="space-y-6">
+                    <!-- Загружается через JS -->
+                </div>
+                
+                <div class="mt-12 text-center bg-yellow-50 p-6 rounded-2xl text-sm text-gray-600 border border-yellow-100">
+                    <i class="fas fa-info-circle mr-2 text-yellow-500 text-lg"></i>
+                    Обратите внимание: история заявок хранится в вашем браузере. Если вы зашли с другого устройства или очистили кэш, список может быть пуст.
                 </div>
             </div>
         </section>
-        
+
         <!-- Contacts -->
         <section id="contacts" class="page-section">
             <div class="text-center mb-12">
-                <h2 data-animate="fade-up" class="text-5xl md:text-6xl font-handwritten text-sage-green">Свяжитесь с нами</h2>
+                <h2 class="text-5xl md:text-6xl font-handwritten text-sage-green mb-4">Давайте дружить</h2>
             </div>
-            <div data-animate="fade-up" class="grid grid-cols-1 md:grid-cols-2 gap-12 bg-white p-8 md:p-12 rounded-lg shadow-md">
-                <div class="space-y-6">
-                    <div>
-                        <h4 class="text-2xl font-handwritten text-gray-800 mb-2">Наши контакты</h4>
-                        <p class="text-gray-700"><i class="fas fa-phone-alt text-sage-green mr-3"></i>+7 (920) 322-62-63</p>
-                        <p class="text-gray-700"><i class="fab fa-whatsapp text-sage-green mr-3"></i><a href="https://wa.me/79203226263" target="_blank" class="hover:underline">Написать в WhatsApp</a></p>
-                        <p class="text-gray-700"><i class="fab fa-telegram-plane text-sage-green mr-3"></i><a href="https://t.me/Taniko_67" target="_blank" class="hover:underline">Написать в Telegram</a></p>
-                    </div>
-                     <div>
-                        <h4 class="text-2xl font-handwritten text-gray-800 mb-2">Мы в соцсетях</h4>
-                        <div class="flex space-x-4 text-2xl">
-                           <a href="https://vk.com/shalfeyart" target="_blank" class="text-gray-500 hover:text-sage-green"><i class="fab fa-vk"></i></a>
-                           <a href="https://t.me/shalfeyart" target="_blank" class="text-gray-500 hover:text-sage-green"><i class="fab fa-telegram-plane"></i> (канал)</a>
-                        </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 bg-white p-8 md:p-12 rounded-3xl shadow-xl max-w-6xl mx-auto">
+                <div class="flex flex-col justify-center">
+                    <h3 class="text-4xl font-handwritten text-gray-800 mb-8">Наши контакты</h3>
+                    <div class="space-y-6 text-xl text-gray-600">
+                        <a href="tel:+79203226263" class="flex items-center gap-4 hover:text-sage-green transition group">
+                            <div class="w-12 h-12 bg-sage-green/10 rounded-full flex items-center justify-center text-sage-green group-hover:bg-sage-green group-hover:text-white transition"><i class="fas fa-phone"></i></div>
+                            +7 (920) 322-62-63
+                        </a>
+                        <a href="https://wa.me/79203226263" target="_blank" class="flex items-center gap-4 hover:text-sage-green transition group">
+                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 group-hover:bg-green-500 group-hover:text-white transition"><i class="fab fa-whatsapp"></i></div>
+                            Написать в WhatsApp
+                        </a>
+                        <a href="https://t.me/Taniko_67" target="_blank" class="flex items-center gap-4 hover:text-sage-green transition group">
+                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition"><i class="fab fa-telegram-plane"></i></div>
+                            Написать в Telegram
+                        </a>
+                        <a href="https://vk.com/shalfeyart" target="_blank" class="flex items-center gap-4 hover:text-sage-green transition group">
+                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 group-hover:bg-blue-700 group-hover:text-white transition"><i class="fab fa-vk"></i></div>
+                            Группа ВКонтакте
+                        </a>
                     </div>
                 </div>
-                <div>
-                     <h4 class="text-2xl font-handwritten text-gray-800 mb-2">Напишите нам</h4>
-                     <form id="contact-form" class="space-y-4" onsubmit="submitOrder(event, 'contact-form', 'contact')">
-                        <input name="name" type="text" placeholder="Ваше имя" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none">
-                        <input name="email" type="text" placeholder="Ваш Email или телефон" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none">
-                        <textarea name="message" rows="5" placeholder="Ваше сообщение" required class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-sage-green focus:outline-none"></textarea>
-                        <button type="submit" class="w-full bg-sage-green text-white font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors">Отправить</button>
-                    </form>
-                </div>
+                <form id="contact-form" class="space-y-4 bg-gray-50 p-6 rounded-2xl" onsubmit="submitOrder(event, 'contact-form', 'contact')">
+                    <h3 class="text-2xl font-handwritten text-gray-800 mb-4">Есть вопрос? Напишите нам!</h3>
+                    <input name="name" placeholder="Как к вам обращаться?" required class="w-full p-4 rounded-xl border border-gray-200 focus:ring-2 ring-sage-green outline-none bg-white">
+                    <input name="email" placeholder="Ваш контакт для связи" required class="w-full p-4 rounded-xl border border-gray-200 focus:ring-2 ring-sage-green outline-none bg-white">
+                    <textarea name="message" rows="5" placeholder="Ваше сообщение..." required class="w-full p-4 rounded-xl border border-gray-200 focus:ring-2 ring-sage-green outline-none bg-white"></textarea>
+                    <button type="submit" class="w-full bg-sage-green text-white font-bold py-4 rounded-xl hover:shadow-lg transition">Отправить сообщение</button>
+                </form>
             </div>
         </section>
 
     </main>
 
-    <footer class="bg-gray-800 text-white mt-16">
-        <div class="container mx-auto px-6 py-8 text-center">
-            <p class="font-handwritten text-2xl mb-2">Шалфей — творческая мастерская</p>
-            <p class="text-gray-500 text-sm">&copy; 2024 Шалфей.</p>
+    <footer class="bg-gray-800 text-white mt-20 py-10">
+        <div class="container mx-auto px-6 text-center">
+            <p class="font-handwritten text-3xl mb-4 text-sage-green">Шалфей</p>
+            <p class="text-gray-400 text-sm">Творческая мастерская. Создаем с любовью.</p>
+            <p class="text-gray-600 text-xs mt-8">&copy; 2024 Shalfey Art.</p>
         </div>
     </footer>
-    
-    <!-- Notification Modal -->
-    <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 opacity-0 invisible" onclick="this.classList.add('opacity-0', 'invisible')">
-        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm text-center" onclick="event.stopPropagation()">
-            <div class="mb-4 text-sage-green text-5xl"><i class="fas fa-check-circle"></i></div>
-            <p id="notification-message" class="text-gray-700 text-lg mb-4"></p>
-            <button class="bg-sage-green text-white font-bold py-2 px-6 rounded-lg hover:bg-opacity-90" onclick="document.getElementById('notification-modal').classList.add('opacity-0', 'invisible')">Отлично</button>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed bottom-8 right-8 bg-white border-l-4 border-sage-green text-gray-800 px-6 py-4 rounded-lg shadow-2xl translate-y-32 opacity-0 transition-all duration-500 z-[100] flex items-center gap-4">
+        <div class="text-sage-green text-2xl"><i class="fas fa-check-circle"></i></div>
+        <div>
+            <h4 class="font-bold text-sm uppercase text-gray-500">Уведомление</h4>
+            <span id="notif-text" class="font-medium">Текст уведомления</span>
         </div>
     </div>
 
-    <!-- Scripts (Navigation and Animation) -->
     <script>
         // Navigation Logic
         const pages = document.querySelectorAll('.page-section');
         const navLinks = document.querySelectorAll('.nav-link');
         const mobileMenu = document.getElementById('mobile-menu');
-        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const preloader = document.getElementById('preloader');
+
+        // Hide preloader
+        window.onload = () => {
+            setTimeout(() => { preloader.classList.add('hidden'); }, 2500);
+        };
 
         function showPage(pageId) {
-            pages.forEach(page => page.classList.remove('active'));
-            const activePage = document.getElementById(pageId);
-            if (activePage) activePage.classList.add('active');
-
-            navLinks.forEach(link => {
-                link.classList.remove('active');
-                if (link.getAttribute('onclick').includes(`'${pageId}'`)) {
-                    link.classList.add('active');
-                }
+            pages.forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            
+            navLinks.forEach(l => {
+                l.classList.remove('active');
+                if(l.getAttribute('onclick').includes(pageId)) l.classList.add('active');
             });
             
+            if(pageId === 'my-orders') {
+                window.loadMyOrders();
+            }
+
             mobileMenu.classList.add('hidden');
-            mobileMenuButton.classList.remove('open');
-            window.scrollTo(0, 0);
-            runAnimations(activePage);
+            window.scrollTo(0,0);
+            
+            const container = document.getElementById(pageId);
+            runAnimations(container);
         }
 
-        mobileMenuButton.addEventListener('click', () => {
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
             mobileMenu.classList.toggle('hidden');
-            mobileMenuButton.classList.toggle('open');
         });
 
-        function showNotification(message) {
-            document.getElementById('notification-message').textContent = message;
-            const modal = document.getElementById('notification-modal');
-            modal.classList.remove('opacity-0', 'invisible');
+        // Sliders Logic
+        function initializeCardSliders() {
+            document.querySelectorAll('.card-slider-container').forEach(container => {
+                if(container.dataset.init) return;
+                container.dataset.init = true;
+
+                const slides = container.querySelectorAll('.slide');
+                if(slides.length < 2) return; 
+
+                let current = 0;
+                const nextBtn = container.querySelector('.slider-next');
+                const prevBtn = container.querySelector('.slider-prev');
+
+                const show = (idx) => {
+                    slides.forEach(s => s.classList.remove('active'));
+                    current = (idx + slides.length) % slides.length;
+                    slides[current].classList.add('active');
+                };
+
+                if(nextBtn) nextBtn.onclick = (e) => { e.stopPropagation(); show(current + 1); };
+                if(prevBtn) prevBtn.onclick = (e) => { e.stopPropagation(); show(current - 1); };
+            });
         }
 
-        // Animation Logic
         function runAnimations(container) {
-            const observer = new IntersectionObserver((entries, observerInstance) => {
+            const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
-                        const el = entry.target;
-                        setTimeout(() => {
-                            el.classList.add('is-visible');
-                        }, el.dataset.delay || 0);
-                        observerInstance.unobserve(el);
+                        entry.target.classList.add('is-visible');
                     }
                 });
             }, { threshold: 0.1 });
 
-            const animatedElements = container.querySelectorAll('[data-animate]');
-            animatedElements.forEach(el => {
-                el.classList.remove('is-visible');
-                observer.observe(el);
-            });
-        }
-        
-        // Slider Logic (Fixed to handle dynamic content)
-        function initializeCardSliders() {
-            const sliderContainers = document.querySelectorAll('.card-slider-container');
-
-            sliderContainers.forEach(container => {
-                // Check if already initialized to avoid duplicate listeners
-                if(container.dataset.initialized) return;
-                
-                const slides = container.querySelectorAll('.slide');
-                const prevBtn = container.querySelector('.slider-prev');
-                const nextBtn = container.querySelector('.slider-next');
-                const dotsContainer = container.parentElement.parentElement.querySelector('.dots-container'); // Adjusted for deeper nesting if needed or find loosely
-
-                // If only 1 slide, hide buttons
-                if (slides.length <= 1) {
-                    if(prevBtn) prevBtn.style.display = 'none';
-                    if(nextBtn) nextBtn.style.display = 'none';
-                    return;
-                }
-
-                container.dataset.initialized = "true";
-                let currentSlide = 0;
-                let dots = null;
-
-                // Try to find dots in the parent card
-                const card = container.closest('.bg-white');
-                if(card) {
-                    dots = card.querySelectorAll('.dot');
-                }
-
-                function showSlide(n) {
-                    if (n >= slides.length) currentSlide = 0;
-                    else if (n < 0) currentSlide = slides.length - 1;
-                    else currentSlide = n;
-
-                    slides.forEach(slide => slide.classList.remove('active'));
-                    if(dots) dots.forEach(dot => dot.classList.remove('active'));
-
-                    if (slides[currentSlide]) slides[currentSlide].classList.add('active');
-                    if (dots && dots[currentSlide]) dots[currentSlide].classList.add('active');
-                }
-
-                if(prevBtn) prevBtn.addEventListener('click', (e) => { e.stopPropagation(); showSlide(currentSlide - 1); });
-                if(nextBtn) nextBtn.addEventListener('click', (e) => { e.stopPropagation(); showSlide(currentSlide + 1); });
-
-                if(dots) {
-                    dots.forEach((dot, index) => {
-                        dot.addEventListener('click', (e) => { e.stopPropagation(); showSlide(index); });
-                    });
-                }
-            });
+            container.querySelectorAll('[data-animate]').forEach(el => observer.observe(el));
         }
 
-        // Init
-        document.addEventListener('DOMContentLoaded', () => {
-            const preloader = document.getElementById('preloader');
-            setTimeout(() => { preloader.classList.add('hidden'); }, 3000);
-            showPage('home');
-        });
+        function showNotification(msg) {
+            const el = document.getElementById('notification');
+            document.getElementById('notif-text').innerText = msg;
+            el.classList.remove('translate-y-32', 'opacity-0');
+            setTimeout(() => el.classList.add('translate-y-32', 'opacity-0'), 4000);
+        }
     </script>
 </body>
 </html>
