@@ -9,13 +9,13 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Google Fonts -->
+    <!-- Google Fonts: Roboto (Base), Caveat (Display/Brand) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     
-    <!-- Material Symbols -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
+    <!-- Material Symbols (Icons) & Font Awesome (Socials) -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
@@ -23,7 +23,9 @@
            MATERIAL DESIGN 3 TOKEN SYSTEM
            ========================================= */
         :root {
-            /* LIGHT THEME (Sage Green Seed) */
+            /* --- PALETTE GENERATION (SEED: #8A9A5B - Sage Green) --- */
+            
+            /* LIGHT THEME */
             --md-sys-color-primary: #4C662B;
             --md-sys-color-on-primary: #FFFFFF;
             --md-sys-color-primary-container: #CDEDA3;
@@ -37,7 +39,7 @@
             --md-sys-color-tertiary-container: #BCECE7;
             --md-sys-color-on-tertiary-container: #00201E;
 
-            --md-sys-color-surface: #FDFDF5;
+            --md-sys-color-surface: #FDFDF5; /* Warm White */
             --md-sys-color-on-surface: #1B1C18;
             --md-sys-color-surface-variant: #E1E4D5;
             --md-sys-color-on-surface-variant: #44483D;
@@ -47,7 +49,7 @@
             --md-sys-color-surface-container-low: #F7F8EE;
             --md-sys-color-surface-container: #F1F2E8;
             --md-sys-color-surface-container-high: #ECECE2;
-
+            
             --md-elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
             --md-elevation-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
             --md-elevation-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px 0px rgba(0, 0, 0, 0.3);
@@ -79,335 +81,626 @@
             --md-sys-color-surface-container: #1F201C;
             --md-sys-color-surface-container-high: #2A2B25;
             
+            /* In dark mode, elevation is usually represented by lighter surface tones, 
+               but we can keep subtle shadows or remove them */
             --md-elevation-1: 0px 1px 2px 0px rgba(0,0,0,0.3); 
             --md-elevation-2: 0px 2px 6px 2px rgba(0,0,0,0.3);
             --md-elevation-3: 0px 4px 8px 3px rgba(0,0,0,0.3);
         }
 
+        /* Base Settings */
         body {
             font-family: 'Roboto', sans-serif;
             background-color: var(--md-sys-color-surface);
             color: var(--md-sys-color-on-surface);
-            transition: background-color 0.4s, color 0.4s;
-            margin: 0; padding: 0; overflow-x: hidden;
+            transition: background-color 0.4s cubic-bezier(0.2, 0.0, 0, 1.0), color 0.4s;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
         }
 
-        h1, h2, h3, h4, .brand-font { font-family: 'Caveat', cursive; }
+        h1, h2, h3, h4, h5, h6, .brand-font {
+            font-family: 'Caveat', cursive;
+        }
 
-        /* --- COMPONENTS --- */
+        /* MD3 Easing */
+        .ease-emphasized { transition-timing-function: cubic-bezier(0.2, 0.0, 0, 1.0); }
 
-        /* Buttons */
+        /* =========================================
+           COMPONENTS
+           ========================================= */
+
+        /* 1. Top App Bar */
+        .md-top-bar {
+            background-color: var(--md-sys-color-surface-container);
+            color: var(--md-sys-color-on-surface);
+            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+        }
+        .md-top-bar.scrolled {
+            background-color: var(--md-sys-color-surface-container-high);
+            box-shadow: var(--md-elevation-2);
+        }
+
+        /* 2. Buttons */
         .md-btn {
-            display: inline-flex; align-items: center; justify-content: center;
-            border-radius: 9999px; height: 40px; padding: 0 24px;
-            font-family: 'Roboto', sans-serif; font-weight: 500; font-size: 14px;
-            letter-spacing: 0.1px; transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
-            cursor: pointer; overflow: hidden; position: relative; border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px; /* Pill shape */
+            padding: 0 24px;
+            height: 40px;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+            letter-spacing: 0.1px;
+            transition: all 0.2s cubic-bezier(0.2, 0.0, 0, 1.0);
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
         }
         .md-btn:active { transform: scale(0.98); }
+
         .md-btn-filled {
             background-color: var(--md-sys-color-primary);
             color: var(--md-sys-color-on-primary);
             box-shadow: var(--md-elevation-1);
         }
-        .md-btn-filled:hover { box-shadow: var(--md-elevation-2); filter: brightness(1.08); }
+        .md-btn-filled:hover {
+            box-shadow: var(--md-elevation-2);
+            filter: brightness(1.08); /* State layer sim */
+        }
+
         .md-btn-tonal {
             background-color: var(--md-sys-color-secondary-container);
             color: var(--md-sys-color-on-secondary-container);
         }
-        .md-btn-tonal:hover { filter: brightness(0.95); box-shadow: var(--md-elevation-1); }
+        .md-btn-tonal:hover {
+            filter: brightness(0.95);
+            box-shadow: var(--md-elevation-1);
+        }
+        html.dark .md-btn-tonal:hover { filter: brightness(1.1); }
+
         .md-btn-text {
-            background-color: transparent; color: var(--md-sys-color-on-surface-variant);
+            background-color: transparent;
+            color: var(--md-sys-color-on-surface-variant);
             padding: 0 16px;
         }
-        .md-btn-text:hover { background-color: rgba(128,128,128, 0.1); color: var(--md-sys-color-on-surface); }
-
-        /* Cards */
-        .md-card {
-            background-color: var(--md-sys-color-surface-container-low);
-            border-radius: 24px; overflow: hidden;
-            transition: transform 0.3s, box-shadow 0.3s;
+        .md-btn-text:hover {
+            background-color: rgba(var(--md-sys-color-on-surface), 0.08);
+            color: var(--md-sys-color-on-surface);
         }
-        .md-card-elevated { box-shadow: var(--md-elevation-1); }
-        html.dark .md-card-elevated { background-color: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); box-shadow: none; }
-        .md-card:hover { transform: translateY(-4px); box-shadow: var(--md-elevation-2); }
-        html.dark .md-card:hover { box-shadow: 0 0 0 1px var(--md-sys-color-outline); }
-
-        /* Inputs */
-        .md-input-group { position: relative; margin-bottom: 1rem; }
-        .md-input {
-            width: 100%; background: transparent; color: var(--md-sys-color-on-surface);
-            border: 1px solid var(--md-sys-color-outline); border-radius: 8px;
-            padding: 16px; font-size: 16px; outline: none; transition: 0.2s;
-        }
-        .md-input:focus { border-color: var(--md-sys-color-primary); border-width: 2px; padding: 15px; }
-        .md-label {
-            position: absolute; left: 16px; top: 16px; color: var(--md-sys-color-on-surface-variant);
-            font-size: 16px; pointer-events: none; background-color: var(--md-sys-color-surface-container-low);
-            padding: 0 4px; transition: 0.2s ease-out;
-        }
-        .md-input:focus ~ .md-label, .md-input:not(:placeholder-shown) ~ .md-label {
-            top: -10px; font-size: 12px; color: var(--md-sys-color-primary); font-weight: 500;
-        }
-
-        /* FAB (Chat) */
-        .md-fab {
-            position: fixed; bottom: 24px; right: 24px;
-            width: 56px; height: 56px; border-radius: 16px;
-            background-color: var(--md-sys-color-primary-container);
-            color: var(--md-sys-color-on-primary-container);
-            box-shadow: var(--md-elevation-3);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
-            z-index: 50;
-        }
-        .md-fab:hover { transform: scale(1.05); filter: brightness(1.05); }
-
-        /* Chat Window */
-        .chat-window {
-            position: fixed; bottom: 90px; right: 24px;
-            width: 360px; height: 500px; max-height: 80vh;
-            background-color: var(--md-sys-color-surface-container-high);
-            border-radius: 28px;
-            box-shadow: var(--md-elevation-3);
-            display: flex; flex-direction: column;
-            overflow: hidden; opacity: 0; pointer-events: none; transform: translateY(20px) scale(0.95);
-            transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
-            z-index: 50;
-        }
-        .chat-window.open { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
-        
-        .chat-bubble {
-            max-width: 80%; padding: 10px 16px; border-radius: 18px;
-            font-size: 14px; line-height: 1.4; margin-bottom: 8px; position: relative;
-        }
-        .chat-bubble.mine {
-            background-color: var(--md-sys-color-primary);
-            color: var(--md-sys-color-on-primary);
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
-        .chat-bubble.theirs {
+        .md-btn-text.active {
             background-color: var(--md-sys-color-secondary-container);
             color: var(--md-sys-color-on-secondary-container);
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
+            font-weight: 700;
         }
 
-        /* Dialog/Modal */
-        .md-dialog-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
-            display: flex; align-items: center; justify-content: center; z-index: 100;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        /* 3. Cards */
+        .md-card {
+            background-color: var(--md-sys-color-surface-container-low);
+            border-radius: 24px; /* MD3 standard */
+            overflow: hidden;
+            transition: transform 0.3s cubic-bezier(0.2, 0.0, 0, 1.0), box-shadow 0.3s;
+            border: 1px solid transparent;
         }
-        .md-dialog-overlay.open { opacity: 1; pointer-events: auto; }
-        .md-dialog {
-            background: var(--md-sys-color-surface-container-high);
-            padding: 24px; border-radius: 28px; width: 90%; max-width: 400px;
-            transform: scale(0.9); transition: transform 0.3s;
-            box-shadow: var(--md-elevation-3);
+        .md-card-elevated {
+            box-shadow: var(--md-elevation-1);
+            background-color: var(--md-sys-color-surface-container-low);
         }
-        .md-dialog-overlay.open .md-dialog { transform: scale(1); }
+        html.dark .md-card-elevated {
+             background-color: var(--md-sys-color-surface-container);
+             border: 1px solid var(--md-sys-color-outline-variant);
+             box-shadow: none;
+        }
+        .md-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--md-elevation-2);
+        }
+        html.dark .md-card:hover { box-shadow: 0 0 0 1px var(--md-sys-color-outline); }
 
-        /* Section Visibility */
-        .page-section { display: none; animation: fadeIn 0.5s ease-out; }
+        /* 4. Text Fields (Outlined) */
+        .md-input-group { position: relative; margin-bottom: 1rem; }
+        
+        .md-input {
+            width: 100%;
+            background: transparent;
+            color: var(--md-sys-color-on-surface);
+            border: 1px solid var(--md-sys-color-outline);
+            border-radius: 4px; /* Small curve for input, MD3 sometimes uses larger but 4px is standard outlined */
+            padding: 16px 16px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+            border-radius: 8px;
+        }
+        .md-input:focus {
+            border-color: var(--md-sys-color-primary);
+            border-width: 2px;
+            padding: 15px 15px; /* Adjust for border width */
+        }
+        .md-label {
+            position: absolute;
+            left: 16px;
+            top: 16px;
+            color: var(--md-sys-color-on-surface-variant);
+            font-size: 16px;
+            pointer-events: none;
+            background-color: var(--md-sys-color-surface-container-low); 
+            /* Background needs to match container to hide border behind label */
+            padding: 0 4px;
+            transition: all 0.2s ease-out;
+        }
+        
+        /* Floating label logic */
+        .md-input:focus ~ .md-label,
+        .md-input:not(:placeholder-shown) ~ .md-label {
+            top: -10px;
+            font-size: 12px;
+            color: var(--md-sys-color-primary);
+            font-weight: 500;
+        }
+        
+        /* Fix background for inputs in dark mode/sections */
+        section.bg-surface-variant .md-label { background-color: var(--md-sys-color-surface-container); }
+        
+        /* 5. Navigation Drawer (Mobile) */
+        #mobile-menu {
+            background-color: var(--md-sys-color-surface-container);
+            border-radius: 0 28px 28px 0;
+            box-shadow: var(--md-elevation-2);
+        }
+
+        /* 6. Carousel Dots */
+        .dot {
+            background-color: var(--md-sys-color-surface-variant);
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        .dot.active {
+            background-color: var(--md-sys-color-primary);
+            transform: scale(1.2);
+            width: 24px; /* oblong active state */
+            border-radius: 6px;
+        }
+
+        /* 7. Icon Button */
+        .md-icon-btn {
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--md-sys-color-on-surface-variant);
+            transition: background 0.2s;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        .md-icon-btn:hover {
+            background-color: rgba(var(--md-sys-color-on-surface), 0.08);
+            color: var(--md-sys-color-on-surface);
+        }
+        
+        /* Section transitions */
+        .page-section {
+            display: none;
+            animation: fadeScale 0.4s cubic-bezier(0.2, 0.0, 0, 1.0);
+        }
         .page-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Star Rating */
-        .star-rating { display: flex; gap: 4px; }
-        .star-rating i {
-            font-size: 2rem; color: var(--md-sys-color-outline-variant); cursor: pointer; transition: color 0.2s;
+        @keyframes fadeScale {
+            from { opacity: 0; transform: scale(0.98) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
-        .star-rating i.active { color: #FBC02D; font-variation-settings: 'FILL' 1; }
-        .star-rating i:hover, .star-rating i:hover ~ i { opacity: 0.8; }
+
+        [data-animate] { opacity: 0; transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+        .is-visible { opacity: 1; transform: none !important; }
+        [data-animate="fade-up"] { transform: translateY(30px); }
+        [data-animate="zoom-in"] { transform: scale(0.92); }
 
         /* Preloader */
-        #preloader { background-color: var(--md-sys-color-surface); }
-        .sage-path { stroke: var(--md-sys-color-primary); stroke-dasharray: 1500; stroke-dashoffset: 1500; animation: draw 3s forwards; }
-        @keyframes draw { to { stroke-dashoffset: 0; } }
+        #preloader {
+            background-color: var(--md-sys-color-surface);
+        }
+        #preloader svg path {
+            stroke: var(--md-sys-color-primary);
+        }
 
+        /* Utilities */
+        .text-on-surface { color: var(--md-sys-color-on-surface); }
+        .text-on-surface-variant { color: var(--md-sys-color-on-surface-variant); }
+        .text-primary { color: var(--md-sys-color-primary); }
+        .bg-surface { background-color: var(--md-sys-color-surface); }
+        .bg-surface-variant { background-color: var(--md-sys-color-surface-container); }
     </style>
 </head>
-<body class="antialiased min-h-screen flex flex-col">
+<body class="antialiased min-h-screen flex flex-col selection:bg-[var(--md-sys-color-primary-container)] selection:text-[var(--md-sys-color-on-primary-container)]">
 
     <!-- =========== PRELOADER =========== -->
-    <div id="preloader" class="fixed inset-0 z-[200] flex justify-center items-center transition-opacity duration-700">
-        <svg class="w-32 h-32" viewBox="0 0 200 200">
+    <div id="preloader" class="fixed inset-0 z-[100] flex justify-center items-center transition-opacity duration-700 ease-out">
+        <svg id="preloader-logo" class="w-32 h-32" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <style>
+                .sage-path {
+                    stroke-dasharray: 1500; stroke-dashoffset: 1500;
+                    animation: draw 3s cubic-bezier(0.2, 0, 0, 1) forwards;
+                }
+                @keyframes draw { to { stroke-dashoffset: 0; } }
+            </style>
             <path class="sage-path" d="M100 180 V 50 M100 130 C75 125 75 155 100 150 M100 130 C125 125 125 155 100 150 M100 100 C80 95 80 120 100 115 M100 100 C120 95 120 120 100 115 M100 75 C90 70 90 90 100 85 M100 75 C110 70 110 90 100 85 M80 160 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 M120,165 a4,4 0 1,0 -8,0 a4,4 0 1,0 8,0 M75 90 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
     </div>
 
-    <!-- =========== TOP APP BAR =========== -->
-    <header id="top-bar" class="sticky top-0 z-50 w-full bg-[var(--md-sys-color-surface-container)] transition-shadow duration-300">
+    <!-- =========== APP BAR =========== -->
+    <header id="top-bar" class="md-top-bar sticky top-0 z-50 w-full transition-all duration-300">
         <div class="container mx-auto px-4 h-16 flex justify-between items-center">
             
+            <!-- Logo & Mobile Menu Trigger -->
             <div class="flex items-center gap-2">
-                <button id="mobile-menu-btn" class="md:hidden p-2 text-[var(--md-sys-color-on-surface)]"><span class="material-symbols-rounded">menu</span></button>
+                <button id="mobile-menu-btn" class="md-icon-btn md:hidden">
+                    <span class="material-symbols-rounded">menu</span>
+                </button>
                 <a href="#" class="flex items-center gap-3 group" onclick="showPage('home')">
                     <div class="h-10 w-10 rounded-full overflow-hidden shadow-sm border border-[var(--md-sys-color-outline-variant)]">
-                        <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/2499.jpg" class="h-full w-full object-cover">
+                        <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/2499.jpg" alt="Логотип" class="h-full w-full object-cover">
                     </div>
-                    <span class="text-2xl brand-font font-bold text-[var(--md-sys-color-primary)]">Шалфей</span>
+                    <span class="text-2xl brand-font font-bold text-primary group-hover:opacity-80 transition-opacity">Шалфей</span>
                 </a>
             </div>
             
+            <!-- Desktop Nav -->
             <nav class="hidden md:flex items-center space-x-1">
                 <button class="md-btn md-btn-text nav-link" onclick="showPage('home')">Главная</button>
                 <button class="md-btn md-btn-text nav-link" onclick="showPage('rentals')">Аренда</button>
                 <button class="md-btn md-btn-text nav-link" onclick="showPage('workshops')">Мастер-классы</button>
                 <button class="md-btn md-btn-text nav-link" onclick="showPage('handmade')">Изделия</button>
-                <button class="md-btn md-btn-text nav-link" onclick="showPage('reviews')">Отзывы</button>
+                <button class="md-btn md-btn-text nav-link" onclick="showPage('about')">О нас</button>
                 <button class="md-btn md-btn-text nav-link" onclick="showPage('contacts')">Контакты</button>
             </nav>
 
-            <div class="flex items-center gap-2">
-                <!-- Theme Toggle -->
-                <button id="theme-toggle" class="p-2 rounded-full text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-high)]">
+            <!-- Actions (Theme Toggle) -->
+            <div class="flex items-center">
+                <button id="theme-toggle" class="md-icon-btn" aria-label="Переключить тему">
                     <span class="material-symbols-rounded dark:hidden">dark_mode</span>
                     <span class="material-symbols-rounded hidden dark:block">light_mode</span>
                 </button>
-                
-                <!-- Auth Button -->
-                <div id="auth-container">
-                    <button id="login-btn" class="md-btn md-btn-filled h-9 text-sm px-4">Войти</button>
-                    <div id="user-profile" class="hidden relative group cursor-pointer">
-                        <img id="user-avatar" src="" class="w-9 h-9 rounded-full border border-[var(--md-sys-color-outline)]">
-                        <div class="absolute right-0 top-10 w-48 bg-[var(--md-sys-color-surface-container-high)] rounded-xl shadow-lg p-2 hidden group-hover:block z-50">
-                            <div id="user-name" class="px-4 py-2 text-sm font-bold text-[var(--md-sys-color-on-surface)]">User</div>
-                            <button id="logout-btn" class="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-[var(--md-sys-color-surface-container)] rounded-lg">Выйти</button>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </header>
 
-    <!-- =========== MOBILE DRAWER =========== -->
-    <div id="mobile-drawer-overlay" class="fixed inset-0 bg-black/50 z-[60] hidden opacity-0 transition-opacity"></div>
-    <aside id="mobile-menu" class="fixed top-0 left-0 bottom-0 w-[300px] z-[70] bg-[var(--md-sys-color-surface-container)] -translate-x-full transition-transform duration-300 p-4 shadow-xl rounded-r-[28px]">
-        <div class="flex justify-between items-center mb-8">
-            <span class="text-3xl brand-font text-[var(--md-sys-color-primary)]">Меню</span>
-            <button id="close-menu-btn" class="p-2"><span class="material-symbols-rounded">close</span></button>
+    <!-- =========== MOBILE DRAWER (MENU) =========== -->
+    <div id="mobile-drawer-overlay" class="fixed inset-0 bg-black/50 z-[60] hidden opacity-0 transition-opacity duration-300 backdrop-blur-sm"></div>
+    <aside id="mobile-menu" class="fixed top-0 left-0 bottom-0 w-[300px] z-[70] transform -translate-x-full transition-transform duration-300 flex flex-col py-6 px-4">
+        <div class="flex items-center justify-between mb-8 px-2">
+            <span class="text-3xl brand-font font-bold text-primary">Меню</span>
+            <button id="close-menu-btn" class="md-icon-btn">
+                <span class="material-symbols-rounded">close</span>
+            </button>
         </div>
         <nav class="flex flex-col gap-2">
-            <button class="md-btn md-btn-text w-full justify-start text-lg h-12" onclick="showPage('home')">Главная</button>
-            <button class="md-btn md-btn-text w-full justify-start text-lg h-12" onclick="showPage('rentals')">Аренда</button>
-            <button class="md-btn md-btn-text w-full justify-start text-lg h-12" onclick="showPage('workshops')">Мастер-классы</button>
-            <button class="md-btn md-btn-text w-full justify-start text-lg h-12" onclick="showPage('handmade')">Изделия</button>
-            <button class="md-btn md-btn-text w-full justify-start text-lg h-12" onclick="showPage('reviews')">Отзывы</button>
-            <button class="md-btn md-btn-text w-full justify-start text-lg h-12" onclick="showPage('contacts')">Контакты</button>
+            <button class="md-btn md-btn-text w-full justify-start text-lg h-12 rounded-full" onclick="showPage('home')"><span class="material-symbols-rounded mr-4">home</span>Главная</button>
+            <button class="md-btn md-btn-text w-full justify-start text-lg h-12 rounded-full" onclick="showPage('rentals')"><span class="material-symbols-rounded mr-4">checkroom</span>Аренда</button>
+            <button class="md-btn md-btn-text w-full justify-start text-lg h-12 rounded-full" onclick="showPage('workshops')"><span class="material-symbols-rounded mr-4">brush</span>Мастер-классы</button>
+            <button class="md-btn md-btn-text w-full justify-start text-lg h-12 rounded-full" onclick="showPage('handmade')"><span class="material-symbols-rounded mr-4">local_mall</span>Изделия</button>
+            <button class="md-btn md-btn-text w-full justify-start text-lg h-12 rounded-full" onclick="showPage('about')"><span class="material-symbols-rounded mr-4">psychology</span>О нас</button>
+            <button class="md-btn md-btn-text w-full justify-start text-lg h-12 rounded-full" onclick="showPage('contacts')"><span class="material-symbols-rounded mr-4">mail</span>Контакты</button>
         </nav>
     </aside>
 
     <!-- =========== MAIN CONTENT =========== -->
-    <main class="container mx-auto px-4 py-8 flex-grow">
+    <main class="container mx-auto px-4 py-6 md:py-10 flex-grow">
 
         <!-- ===== HOME ===== -->
-        <section id="home" class="page-section active">
-            <div class="text-center mb-16">
-                <h1 class="text-5xl md:text-7xl font-bold text-[var(--md-sys-color-primary)] mb-6">Природа и Творчество</h1>
-                <p class="text-lg md:text-xl text-[var(--md-sys-color-on-surface-variant)] max-w-2xl mx-auto">Уникальные костюмы, душевные мастер-классы и уютные изделия ручной работы.</p>
-                <div class="mt-8 flex justify-center gap-4">
+        <section id="home" class="page-section">
+            <div class="flex flex-col items-center text-center mb-16 px-4">
+                <div data-animate="fade-up" class="inline-flex items-center justify-center p-3 mb-6 rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]">
+                    <span class="material-symbols-rounded text-xl mr-2">spa</span>
+                    <span class="text-sm font-medium">Творчество & Природа</span>
+                </div>
+                <h1 data-animate="fade-up" data-delay="100" class="text-5xl md:text-7xl font-bold text-primary mb-6 leading-tight">Природа, волшебство<br>и вдохновение</h1>
+                <p data-animate="fade-up" data-delay="200" class="text-lg md:text-xl text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
+                    Пространство для души, где мы создаем уникальные костюмы, проводим душевные мастер-классы и творим красоту.
+                </p>
+                <div data-animate="fade-up" data-delay="300" class="mt-8 flex gap-4">
                     <button class="md-btn md-btn-filled" onclick="showPage('rentals')">Смотреть костюмы</button>
                     <button class="md-btn md-btn-tonal" onclick="showPage('workshops')">Записаться на МК</button>
                 </div>
             </div>
-            
-            <!-- Hero Images -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="h-80 rounded-[32px] overflow-hidden relative group cursor-pointer" onclick="showPage('rentals')">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/kostum%20krasny%20plasch%20eshe%20photo.jpg" class="w-full h-full object-cover transition duration-700 group-hover:scale-110">
-                    <div class="absolute inset-0 bg-black/40 flex items-end p-8"><h3 class="text-white text-4xl brand-font">Аренда</h3></div>
+
+            <!-- Hero Categories -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                <!-- Card 1 -->
+                <div data-animate="zoom-in" class="group relative h-80 md:h-96 rounded-[32px] overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-shadow duration-300" onclick="showPage('rentals')">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/kostum%20krasny%20plasch%20eshe%20photo.jpg" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Аренда">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-8">
+                        <h3 class="text-white text-4xl brand-font">Аренда костюмов</h3>
+                        <p class="text-white/90 mt-2 text-sm opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-4 group-hover:translate-y-0 duration-300">Создайте незабываемый образ</p>
+                    </div>
                 </div>
-                <div class="h-80 rounded-[32px] overflow-hidden relative group cursor-pointer" onclick="showPage('workshops')">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" class="w-full h-full object-cover transition duration-700 group-hover:scale-110">
-                    <div class="absolute inset-0 bg-black/40 flex items-end p-8"><h3 class="text-white text-4xl brand-font">Мастер-классы</h3></div>
+                <!-- Card 2 -->
+                <div data-animate="zoom-in" data-delay="100" class="group relative h-80 md:h-96 rounded-[32px] overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-shadow duration-300" onclick="showPage('workshops')">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="МК">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-8">
+                        <h3 class="text-white text-4xl brand-font">Мастер-классы</h3>
+                        <p class="text-white/90 mt-2 text-sm opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-4 group-hover:translate-y-0 duration-300">Творите своими руками</p>
+                    </div>
                 </div>
-                <div class="h-80 rounded-[32px] overflow-hidden relative group cursor-pointer" onclick="showPage('handmade')">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kluchnitsa%20dlya%20kluchey%20vvide%20domikov.jpg" class="w-full h-full object-cover transition duration-700 group-hover:scale-110">
-                    <div class="absolute inset-0 bg-black/40 flex items-end p-8"><h3 class="text-white text-4xl brand-font">Изделия</h3></div>
+                <!-- Card 3 -->
+                <div data-animate="zoom-in" data-delay="200" class="group relative h-80 md:h-96 rounded-[32px] overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-shadow duration-300" onclick="showPage('handmade')">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kluchnitsa%20dlya%20kluchey%20vvide%20domikov.jpg" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Изделия">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-8">
+                        <h3 class="text-white text-4xl brand-font">Изделия</h3>
+                        <p class="text-white/90 mt-2 text-sm opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-4 group-hover:translate-y-0 duration-300">Уют для вашего дома</p>
+                    </div>
                 </div>
             </div>
+            
         </section>
 
-        <!-- ===== RENTALS (Simplified for brevity, same MD3 style) ===== -->
+        <!-- ===== RENTALS ===== -->
         <section id="rentals" class="page-section">
-            <h2 class="text-5xl text-center brand-font text-[var(--md-sys-color-primary)] mb-8">Коллекция костюмов</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="md-card md-card-elevated flex flex-col p-4">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/blackgold-demonstraciyanakidkiteploy.jpg" class="rounded-[20px] h-64 object-cover mb-4">
-                    <h4 class="text-2xl brand-font">Темное золото</h4>
-                    <p class="text-sm text-[var(--md-sys-color-on-surface-variant)] mt-2">Аренда: 800 ₽ / сутки</p>
-                    <button class="md-btn md-btn-tonal mt-4 w-full" onclick="openChatWithProduct('Темное золото')">Забронировать в чате</button>
+            <div class="text-center mb-12 max-w-4xl mx-auto">
+                <span class="text-[var(--md-sys-color-primary)] font-bold tracking-wider uppercase text-sm">Коллекция</span>
+                <h2 data-animate="fade-up" class="text-5xl md:text-6xl brand-font text-on-surface mt-2 mb-4">Волшебные образы</h2>
+                <p data-animate="fade-up" data-delay="100" class="text-lg text-on-surface-variant">Выберите образ для вашей фотосессии, праздника или фестиваля.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Rental Card Template -->
+                <div data-animate="zoom-in" class="md-card md-card-elevated flex flex-col">
+                    <div class="relative h-80 w-full bg-gray-200 card-slider-container" data-slider-id="costume-gold">
+                        <!-- Slides -->
+                        <div class="slide active absolute inset-0 transition-opacity duration-500 opacity-100 z-10"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/blackgold-demonstraciyanakidkiteploy.jpg" class="w-full h-full object-cover"></div>
+                        <div class="slide absolute inset-0 transition-opacity duration-500 opacity-0 z-0"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/blackgold-smitritvzerkalodemonstriuyakorony.jpg" class="w-full h-full object-cover"></div>
+                        <div class="slide absolute inset-0 transition-opacity duration-500 opacity-0 z-0"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/blackgold-vplonyrost.jpg" class="w-full h-full object-cover"></div>
+                        
+                        <!-- Controls -->
+                        <button class="slider-prev absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/30 text-white backdrop-blur-sm flex items-center justify-center hover:bg-black/50 transition"><span class="material-symbols-rounded">chevron_left</span></button>
+                        <button class="slider-next absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/30 text-white backdrop-blur-sm flex items-center justify-center hover:bg-black/50 transition"><span class="material-symbols-rounded">chevron_right</span></button>
+                        
+                        <!-- Dots -->
+                        <div class="absolute bottom-4 left-0 right-0 z-20 flex justify-center gap-2 dots-container">
+                            <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h4 class="text-2xl brand-font font-bold text-on-surface">Темное золото</h4>
+                        <p class="text-on-surface-variant mt-2 text-sm leading-relaxed flex-grow">Элегантный черный костюм с позолоченной отделкой. Загадочный и величественный образ.</p>
+                        <div class="mt-6 pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-medium text-on-surface-variant">Сутки</span>
+                                <span class="font-bold text-primary text-lg">800 ₽</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-on-surface-variant">Неделя</span>
+                                <span class="font-bold text-primary text-lg">2500 ₽</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                 <div class="md-card md-card-elevated flex flex-col p-4">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kostum%20krasny%20plasch%20eshe%20photo.jpg" class="rounded-[20px] h-64 object-cover mb-4">
-                    <h4 class="text-2xl brand-font">Красная мантия</h4>
-                    <p class="text-sm text-[var(--md-sys-color-on-surface-variant)] mt-2">Аренда: 800 ₽ / сутки</p>
-                    <button class="md-btn md-btn-tonal mt-4 w-full" onclick="openChatWithProduct('Красная мантия')">Забронировать в чате</button>
+
+                <!-- Card 2 -->
+                <div data-animate="zoom-in" data-delay="100" class="md-card md-card-elevated flex flex-col">
+                    <div class="relative h-80 w-full bg-gray-200 card-slider-container" data-slider-id="costume-red">
+                        <div class="slide active absolute inset-0 transition-opacity duration-500 opacity-100"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kostum%20krasny%20plasch%20eshe%20photo.jpg" class="w-full h-full object-cover"></div>
+                        <div class="slide absolute inset-0 transition-opacity duration-500 opacity-0"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/krashy%20plasch%20kostum.jpg" class="w-full h-full object-cover"></div>
+                        <button class="slider-prev absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/30 text-white backdrop-blur-sm flex items-center justify-center hover:bg-black/50"><span class="material-symbols-rounded">chevron_left</span></button>
+                        <button class="slider-next absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/30 text-white backdrop-blur-sm flex items-center justify-center hover:bg-black/50"><span class="material-symbols-rounded">chevron_right</span></button>
+                        <div class="absolute bottom-4 left-0 right-0 z-20 flex justify-center gap-2 dots-container"><div class="dot active"></div><div class="dot"></div></div>
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h4 class="text-2xl brand-font font-bold text-on-surface">Красная мантия</h4>
+                        <p class="text-on-surface-variant mt-2 text-sm leading-relaxed flex-grow">Яркий и запоминающийся образ. Отлично смотрится на фотографиях и подходит для сказок.</p>
+                        <div class="mt-6 pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-medium text-on-surface-variant">Сутки</span>
+                                <span class="font-bold text-primary text-lg">800 ₽</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                 <div class="md-card md-card-elevated flex flex-col p-4">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/vedmochka2.jpg" class="rounded-[20px] h-64 object-cover mb-4">
-                    <h4 class="text-2xl brand-font">Лесная ведунья</h4>
-                    <p class="text-sm text-[var(--md-sys-color-on-surface-variant)] mt-2">Аренда: 800 ₽ / сутки</p>
-                    <button class="md-btn md-btn-tonal mt-4 w-full" onclick="openChatWithProduct('Лесная ведунья')">Забронировать в чате</button>
+
+                <!-- Card 3 -->
+                <div data-animate="zoom-in" data-delay="200" class="md-card md-card-elevated flex flex-col">
+                    <div class="relative h-80 w-full bg-gray-200 card-slider-container" data-slider-id="costume-witch">
+                        <div class="slide active absolute inset-0 transition-opacity duration-500 opacity-100"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/vedmochka2.jpg" class="w-full h-full object-cover"></div>
+                        <div class="slide absolute inset-0 transition-opacity duration-500 opacity-0"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/vedmochka1.jpg" class="w-full h-full object-cover"></div>
+                        <div class="slide absolute inset-0 transition-opacity duration-500 opacity-0"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/esche%20vedmochki.jpg" class="w-full h-full object-cover"></div>
+                        <button class="slider-prev absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/30 text-white backdrop-blur-sm flex items-center justify-center hover:bg-black/50"><span class="material-symbols-rounded">chevron_left</span></button>
+                        <button class="slider-next absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/30 text-white backdrop-blur-sm flex items-center justify-center hover:bg-black/50"><span class="material-symbols-rounded">chevron_right</span></button>
+                        <div class="absolute bottom-4 left-0 right-0 z-20 flex justify-center gap-2 dots-container"><div class="dot active"></div><div class="dot"></div><div class="dot"></div></div>
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h4 class="text-2xl brand-font font-bold text-on-surface">Лесная ведунья</h4>
+                        <p class="text-on-surface-variant mt-2 text-sm leading-relaxed flex-grow">Таинственный и аутентичный наряд. Многослойная одежда и аксессуары.</p>
+                        <div class="mt-6 pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-medium text-on-surface-variant">Сутки</span>
+                                <span class="font-bold text-primary text-lg">800 ₽</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rental Form Section -->
+            <div class="mt-16 grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-16 items-start">
+                <div class="bg-surface-variant p-8 rounded-[32px]">
+                     <h3 class="text-3xl brand-font text-primary mb-6">Условия аренды</h3>
+                     <ul class="space-y-4">
+                        <li class="flex items-start gap-4">
+                            <span class="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-on-primary-container flex items-center justify-center flex-shrink-0"><span class="material-symbols-rounded text-lg">payments</span></span>
+                            <div>
+                                <strong class="block text-on-surface">Залог 3000 руб.</strong>
+                                <span class="text-on-surface-variant text-sm">Возвращается сразу при сдаче костюма.</span>
+                            </div>
+                        </li>
+                         <li class="flex items-start gap-4">
+                            <span class="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-on-primary-container flex items-center justify-center flex-shrink-0"><span class="material-symbols-rounded text-lg">checkroom</span></span>
+                            <div>
+                                <strong class="block text-on-surface">Бесплатная примерка</strong>
+                                <span class="text-on-surface-variant text-sm">По предварительной записи.</span>
+                            </div>
+                        </li>
+                         <li class="flex items-start gap-4">
+                            <span class="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-on-primary-container flex items-center justify-center flex-shrink-0"><span class="material-symbols-rounded text-lg">clean_hands</span></span>
+                            <div>
+                                <strong class="block text-on-surface">Чистота</strong>
+                                <span class="text-on-surface-variant text-sm">Костюм должен быть возвращен в исходном виде.</span>
+                            </div>
+                        </li>
+                     </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-3xl brand-font text-on-surface mb-6">Забронировать</h3>
+                    <form id="rental-form" class="space-y-4">
+                        <div class="md-input-group">
+                            <input name="name" type="text" id="r-name" placeholder=" " class="md-input peer" required>
+                            <label for="r-name" class="md-label">Ваше имя</label>
+                        </div>
+                        <div class="md-input-group">
+                            <input name="phone" type="tel" id="r-phone" placeholder=" " class="md-input peer" required>
+                            <label for="r-phone" class="md-label">Ваш телефон</label>
+                        </div>
+                        <div class="md-input-group">
+                            <input name="costume" type="text" id="r-costume" placeholder=" " class="md-input peer" required>
+                            <label for="r-costume" class="md-label">Название костюма</label>
+                        </div>
+                        <div class="md-input-group">
+                            <input name="dates" type="text" id="r-dates" placeholder=" " class="md-input peer" required>
+                            <label for="r-dates" class="md-label">Желаемые даты</label>
+                        </div>
+                        <button type="submit" class="md-btn md-btn-filled w-full mt-2">
+                            <span class="material-symbols-rounded mr-2">send</span>
+                            Отправить в Telegram
+                        </button>
+                    </form>
                 </div>
             </div>
         </section>
 
         <!-- ===== WORKSHOPS ===== -->
         <section id="workshops" class="page-section">
-            <h2 class="text-5xl text-center brand-font text-[var(--md-sys-color-primary)] mb-8">Творческие встречи</h2>
-             <div class="space-y-6">
-                <div class="md-card md-card-elevated p-6 flex flex-col md:flex-row gap-6 items-center">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" class="w-full md:w-1/3 rounded-[20px] h-64 object-cover">
-                    <div class="flex-1">
-                        <h3 class="text-3xl brand-font">Шкатулка "Медное сокровище"</h3>
-                        <p class="mt-2 text-[var(--md-sys-color-on-surface-variant)]">Техники состаривания и имитации чеканки.</p>
-                        <div class="mt-6 flex items-center justify-between">
-                            <span class="text-xl font-bold text-[var(--md-sys-color-primary)]">1500 ₽</span>
-                            <button class="md-btn md-btn-filled" onclick="openChatWithProduct('МК Шкатулка')">Записаться</button>
+            <div class="text-center mb-12">
+                <h2 data-animate="fade-up" class="text-5xl md:text-6xl brand-font text-primary">Творческие встречи</h2>
+                <p data-animate="fade-up" data-delay="100" class="text-lg text-on-surface-variant mt-2">Создавайте прекрасное своими руками.</p>
+            </div>
+            
+            <div class="space-y-8">
+                <!-- Workshop 1 -->
+                <div data-animate="fade-up" class="md-card md-card-elevated flex flex-col md:flex-row overflow-hidden">
+                    <div class="w-full md:w-2/5 h-64 md:h-auto">
+                        <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-8 flex-1 flex flex-col justify-center">
+                        <h3 class="text-3xl brand-font text-on-surface mb-2">Шкатулка "Медное сокровище"</h3>
+                        <p class="text-on-surface-variant mb-6 leading-relaxed">Освойте техники декорирования и состаривания, научитесь создавать имитацию чеканки по меди.</p>
+                        <div class="flex items-center justify-between mt-auto">
+                            <span class="text-2xl font-bold text-primary">1500 ₽</span>
+                            <button class="md-btn md-btn-filled" onclick="signUpViaTelegram('Хочу на МК по шкатулке')">Записаться</button>
                         </div>
                     </div>
                 </div>
-             </div>
+
+                <!-- Workshop 2 -->
+                <div data-animate="fade-up" class="md-card md-card-elevated flex flex-col md:flex-row-reverse overflow-hidden">
+                    <div class="w-full md:w-2/5 h-64 md:h-auto">
+                        <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/korobka%20elochnie%20igrushky.jpg" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-8 flex-1 flex flex-col justify-center">
+                        <h3 class="text-3xl brand-font text-on-surface mb-2">Роспись новогодних игрушек</h3>
+                        <p class="text-on-surface-variant mb-6 leading-relaxed">Собственный набор уникальных украшений! Деревянные заготовки, краски, блёстки и декор включены.</p>
+                        <div class="flex items-center justify-between mt-auto">
+                            <span class="text-2xl font-bold text-primary">1000 ₽</span>
+                            <button class="md-btn md-btn-filled" onclick="signUpViaTelegram('Хочу на МК по игрушкам')">Записаться</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div data-animate="fade-up" class="mt-12 p-10 rounded-[32px] bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] text-center">
+                <h3 class="text-3xl brand-font mb-4">Выездной мастер-класс</h3>
+                <p class="mb-6 opacity-90 max-w-xl mx-auto">Девичник, день рождения или корпоратив? Мы организуем творческое пространство на вашей территории.</p>
+                <button class="md-btn bg-[var(--md-sys-color-tertiary)] text-white hover:brightness-110 shadow-md" onclick="signUpViaTelegram('Обсудить выездной МК')">Обсудить детали</button>
+            </div>
         </section>
 
         <!-- ===== HANDMADE ===== -->
         <section id="handmade" class="page-section">
-            <h2 class="text-5xl text-center brand-font text-[var(--md-sys-color-primary)] mb-8">Ручная работа</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                 <div class="md-card md-card-elevated p-3">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kluchnitsa%20dlya%20kluchey%20vvide%20domikov.jpg" class="rounded-[16px] h-48 w-full object-cover">
-                    <h4 class="text-xl brand-font mt-2">Ключница</h4>
-                    <span class="block font-bold text-[var(--md-sys-color-primary)]">1500 ₽</span>
+            <div class="text-center mb-12">
+                <h2 data-animate="fade-up" class="text-5xl md:text-6xl brand-font text-primary">Ручная работа</h2>
+                <p data-animate="fade-up" data-delay="100" class="text-lg text-on-surface-variant mt-2">Уютные детали, созданные с душой.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Item 1 -->
+                <div data-animate="zoom-in" class="md-card md-card-elevated flex flex-col">
+                    <div class="h-64 overflow-hidden">
+                        <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kluchnitsa%20dlya%20kluchey%20vvide%20domikov.jpg" class="w-full h-full object-cover hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <div class="p-5 flex flex-col flex-grow">
+                        <h4 class="text-xl brand-font font-bold text-on-surface">Ключница "Домики"</h4>
+                        <p class="text-sm text-on-surface-variant mt-2 flex-grow">Очаровательный декор для прихожей.</p>
+                        <span class="mt-4 text-lg font-bold text-primary">1500 ₽</span>
+                    </div>
                 </div>
-                <div class="md-card md-card-elevated p-3">
-                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/elochny%20igrushky%20vnutry.jpg" class="rounded-[16px] h-48 w-full object-cover">
-                    <h4 class="text-xl brand-font mt-2">Игрушки</h4>
-                    <span class="block font-bold text-[var(--md-sys-color-primary)]">1000 ₽</span>
+                <!-- Item 2 -->
+                <div data-animate="zoom-in" data-delay="100" class="md-card md-card-elevated flex flex-col">
+                    <div class="h-64 overflow-hidden">
+                        <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" class="w-full h-full object-cover hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <div class="p-5 flex flex-col flex-grow">
+                        <h4 class="text-xl brand-font font-bold text-on-surface">Шкатулка "Медь"</h4>
+                        <p class="text-sm text-on-surface-variant mt-2 flex-grow">Имитация чеканки, ручная роспись.</p>
+                        <span class="mt-4 text-lg font-bold text-primary">от 800 ₽</span>
+                    </div>
                 </div>
+                <!-- Item 3 -->
+                <div data-animate="zoom-in" data-delay="200" class="md-card md-card-elevated flex flex-col">
+                    <div class="h-64 overflow-hidden">
+                        <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/elochny%20igrushky%20vnutry.jpg" class="w-full h-full object-cover hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <div class="p-5 flex flex-col flex-grow">
+                        <h4 class="text-xl brand-font font-bold text-on-surface">Набор "Зимняя сказка"</h4>
+                        <p class="text-sm text-on-surface-variant mt-2 flex-grow">Уникальные украшения на елку.</p>
+                        <span class="mt-4 text-lg font-bold text-primary">1000 ₽</span>
+                    </div>
+                </div>
+                <!-- Item 4 -->
+                <div data-animate="zoom-in" data-delay="300" class="md-card md-card-elevated flex flex-col">
+                    <div class="h-64 overflow-hidden">
+                        <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/korzinka%20novogodnaya%20s%20elovimi%20vetochkamy%20i%20hlopok.jpg" class="w-full h-full object-cover hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <div class="p-5 flex flex-col flex-grow">
+                        <h4 class="text-xl brand-font font-bold text-on-surface">Композиция</h4>
+                        <p class="text-sm text-on-surface-variant mt-2 flex-grow">Еловые ветки и хлопок в корзинке.</p>
+                        <span class="mt-4 text-lg font-bold text-primary">1100 ₽</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-12 flex justify-center">
+                 <button class="md-btn md-btn-tonal h-12 px-8" onclick="showPage('contacts')">
+                    <span class="material-symbols-rounded mr-2">shopping_bag</span>
+                    Сделать индивидуальный заказ
+                </button>
             </div>
         </section>
 
-        <!-- ===== REVIEWS (FIRESTORE) ===== -->
-        <section id="reviews" class="page-section">
-            <div class="text-center mb-10">
-                <h2 class="text-5xl brand-font text-[var(--md-sys-color-primary)]">Отзывы гостей</h2>
-                <p class="text-[var(--md-sys-color-on-surface-variant)] mb-6">Настоящие истории наших посетителей</p>
-                <button id="write-review-btn" class="md-btn md-btn-filled" onclick="openReviewModal()">
-                    <span class="material-symbols-rounded mr-2">edit</span>
-                    Оставить отзыв
-                </button>
-            </div>
-
-            <!-- Reviews Grid -->
-            <div id="reviews-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Reviews injected via JS -->
-                <div class="col-span-full text-center py-10 text-[var(--md-sys-color-on-surface-variant)]">
-                    <span class="material-symbols-rounded animate-spin text-3xl">refresh</span>
-                    <p>Загрузка отзывов...</p>
+        <!-- ===== ABOUT ===== -->
+        <section id="about" class="page-section">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div data-animate="fade-up">
+                    <h2 class="text-5xl md:text-6xl brand-font text-primary mb-6">Наша история</h2>
+                    <div class="space-y-6 text-lg text-on-surface-variant leading-relaxed">
+                        <p>Путь к "Шалфею" начался с двух увлечений: дизайна и психологии. Я всегда любила создавать красоту, но также изучала психологию, погружаясь в темы арт-терапии и силы природы.</p>
+                        <p class="pl-4 border-l-4 border-[var(--md-sys-color-primary)]">"Шалфей" — это не просто вещи. Это медитация, исцеление и способ самовыражения.</p>
+                        <p>Шалфей символизирует мудрость и очищение. Мы создаем пространство для нового, для творчества и для себя.</p>
+                    </div>
+                </div>
+                <div data-animate="zoom-in" class="grid grid-cols-2 gap-4">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kostum%20krasny%20plasch%20eshe%20photo.jpg" class="rounded-[24px] shadow-md object-cover w-full h-full aspect-[4/5] bg-gray-200">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/korzinka%20novogodnaya%20s%20elovimi%20vetochkamy%20i%20hlopok.jpg" class="rounded-[24px] shadow-md object-cover w-full h-full mt-8 aspect-[4/5] bg-gray-200">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/esche%20vedmochki.jpg" class="rounded-[24px] shadow-md object-cover w-full h-full aspect-[4/5] bg-gray-200">
+                    <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" class="rounded-[24px] shadow-md object-cover w-full h-full mt-8 aspect-[4/5] bg-gray-200">
                 </div>
             </div>
         </section>
@@ -415,507 +708,319 @@
         <!-- ===== CONTACTS ===== -->
         <section id="contacts" class="page-section">
             <div class="text-center mb-12">
-                <h2 class="text-5xl brand-font text-[var(--md-sys-color-primary)]">На связи</h2>
+                <h2 data-animate="fade-up" class="text-5xl md:text-6xl brand-font text-primary">На связи</h2>
             </div>
-            <div class="bg-[var(--md-sys-color-surface-container)] rounded-[32px] p-8 max-w-2xl mx-auto flex flex-col md:flex-row gap-8 items-center">
-                 <div class="text-left space-y-4 flex-1">
-                    <div class="flex items-center gap-3">
-                        <span class="w-10 h-10 rounded-full bg-[var(--md-sys-color-surface)] flex items-center justify-center"><i class="fas fa-phone"></i></span>
-                        <span>+7 (920) 322-62-63</span>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <!-- Info -->
+                <div data-animate="fade-right" class="bg-surface-variant p-8 md:p-10 rounded-[32px] space-y-8">
+                    <div>
+                        <h4 class="text-2xl brand-font text-on-surface mb-4">Контакты</h4>
+                        <div class="space-y-3">
+                            <a href="tel:+79203226263" class="flex items-center gap-4 text-on-surface hover:text-primary transition">
+                                <span class="w-10 h-10 rounded-full bg-[var(--md-sys-color-surface)] flex items-center justify-center"><i class="fas fa-phone-alt"></i></span>
+                                +7 (920) 322-62-63
+                            </a>
+                            <a href="https://wa.me/79203226263" target="_blank" class="flex items-center gap-4 text-on-surface hover:text-primary transition">
+                                <span class="w-10 h-10 rounded-full bg-[var(--md-sys-color-surface)] flex items-center justify-center"><i class="fab fa-whatsapp"></i></span>
+                                WhatsApp
+                            </a>
+                             <a href="https://t.me/Taniko_67" target="_blank" class="flex items-center gap-4 text-on-surface hover:text-primary transition">
+                                <span class="w-10 h-10 rounded-full bg-[var(--md-sys-color-surface)] flex items-center justify-center"><i class="fab fa-telegram-plane"></i></span>
+                                Telegram (личные)
+                            </a>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <span class="w-10 h-10 rounded-full bg-[var(--md-sys-color-surface)] flex items-center justify-center"><i class="fas fa-map-marker-alt"></i></span>
-                        <span>д. Станички, ул. Полевая 12</span>
+                    
+                    <div>
+                        <h4 class="text-2xl brand-font text-on-surface mb-4">Адрес</h4>
+                         <div class="flex items-start gap-4 text-on-surface">
+                            <span class="w-10 h-10 rounded-full bg-[var(--md-sys-color-surface)] flex items-center justify-center flex-shrink-0"><i class="fas fa-map-marker-alt"></i></span>
+                            <div>
+                                <p>Смоленская область, д. Станички</p>
+                                <p>ул. Полевая, д. 12</p>
+                                <p class="text-sm text-on-surface-variant mt-1">(по предварительной записи)</p>
+                            </div>
+                        </div>
                     </div>
-                 </div>
-                 <div class="flex gap-4">
-                     <a href="https://vk.com/shalfeyart" target="_blank" class="md-btn md-btn-tonal w-12 h-12 p-0 rounded-full"><i class="fab fa-vk text-xl"></i></a>
-                     <button onclick="document.getElementById('chat-fab').click()" class="md-btn md-btn-filled w-12 h-12 p-0 rounded-full"><i class="fas fa-comment text-xl"></i></button>
-                 </div>
+
+                    <div>
+                        <h4 class="text-2xl brand-font text-on-surface mb-4">Соцсети</h4>
+                        <div class="flex gap-4">
+                            <a href="https://vk.com/shalfeyart" target="_blank" class="md-icon-btn bg-[var(--md-sys-color-surface)]"><i class="fab fa-vk text-xl"></i></a>
+                            <a href="https://t.me/shalfeyart" target="_blank" class="md-icon-btn bg-[var(--md-sys-color-surface)]"><i class="fab fa-telegram-plane text-xl"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form -->
+                <div data-animate="fade-left">
+                    <form id="contact-form" class="bg-[var(--md-sys-color-surface-container-low)] p-8 md:p-10 rounded-[32px] border border-[var(--md-sys-color-outline-variant)] space-y-5 shadow-sm">
+                        <h4 class="text-2xl brand-font text-on-surface mb-2">Напишите нам</h4>
+                        
+                        <div class="md-input-group">
+                            <input name="name" type="text" id="c-name" placeholder=" " class="md-input peer" required>
+                            <label for="c-name" class="md-label">Ваше имя</label>
+                        </div>
+                        
+                        <div class="md-input-group">
+                            <input name="email" type="text" id="c-email" placeholder=" " class="md-input peer" required>
+                            <label for="c-email" class="md-label">Email или телефон</label>
+                        </div>
+                        
+                        <div class="md-input-group">
+                            <textarea name="message" id="c-message" rows="4" placeholder=" " class="md-input peer" required></textarea>
+                            <label for="c-message" class="md-label">Сообщение</label>
+                        </div>
+                        
+                        <button type="submit" class="md-btn md-btn-filled w-full h-12 text-lg">
+                            <span class="material-symbols-rounded mr-2">send</span>
+                            Отправить
+                        </button>
+                    </form>
+                </div>
             </div>
         </section>
 
     </main>
 
-    <!-- =========== CHAT WIDGET =========== -->
-    <button id="chat-fab" class="md-fab">
-        <span class="material-symbols-rounded text-2xl">chat</span>
-        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center hidden" id="unread-badge">0</span>
-    </button>
-
-    <div id="chat-window" class="chat-window">
-        <!-- Chat Header -->
-        <div class="bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] p-4 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                    <span class="material-symbols-rounded text-sm">spa</span>
-                </div>
-                <div>
-                    <h4 class="font-bold text-sm" id="chat-header-title">Чат с продавцом</h4>
-                    <span class="text-xs opacity-80" id="chat-header-subtitle">Онлайн</span>
-                </div>
+    <!-- =========== FOOTER =========== -->
+    <footer class="bg-[var(--md-sys-color-surface-container-high)] text-on-surface py-8 mt-12 transition-colors duration-300">
+        <div class="container mx-auto px-4 flex flex-col items-center">
+            <span class="text-3xl brand-font text-primary mb-4">Шалфей</span>
+            <div class="flex space-x-6 mb-6">
+                <a href="https://vk.com/shalfeyart" target="_blank" class="text-on-surface-variant hover:text-primary transition transform hover:scale-110"><i class="fab fa-vk text-2xl"></i></a>
+                <a href="https://t.me/shalfeyart" target="_blank" class="text-on-surface-variant hover:text-primary transition transform hover:scale-110"><i class="fab fa-telegram-plane text-2xl"></i></a>
+                <a href="https://wa.me/79203226263" target="_blank" class="text-on-surface-variant hover:text-primary transition transform hover:scale-110"><i class="fab fa-whatsapp text-2xl"></i></a>
             </div>
-            <button onclick="toggleChat()" class="text-white hover:bg-white/10 rounded-full p-1"><span class="material-symbols-rounded">close</span></button>
+            <p class="text-sm text-on-surface-variant">&copy; 2026 Творческая мастерская. Все права защищены.</p>
         </div>
-        
-        <!-- Admin Chat List (Only visible to admin) -->
-        <div id="admin-chat-list" class="hidden flex-col h-full bg-[var(--md-sys-color-surface-container)] overflow-y-auto">
-            <!-- Items injected via JS -->
-        </div>
+    </footer>
 
-        <!-- Chat Messages Area -->
-        <div id="chat-messages" class="flex-grow p-4 overflow-y-auto bg-[var(--md-sys-color-surface-container-high)] flex flex-col">
-            <div class="text-center text-xs text-[var(--md-sys-color-outline)] mt-4">Напишите нам, мы ответим в ближайшее время.</div>
-        </div>
-
-        <!-- Input Area -->
-        <div id="chat-input-area" class="p-3 bg-[var(--md-sys-color-surface)] border-t border-[var(--md-sys-color-outline-variant)] flex gap-2 items-center">
-            <input type="text" id="chat-input" placeholder="Сообщение..." class="flex-grow bg-[var(--md-sys-color-surface-container-high)] border-none rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)]">
-            <button id="send-btn" class="w-10 h-10 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center hover:shadow-md transition">
-                <span class="material-symbols-rounded text-sm">send</span>
-            </button>
-        </div>
-        
-        <!-- Login Overlay for Chat -->
-        <div id="chat-login-overlay" class="absolute inset-0 bg-[var(--md-sys-color-surface-container-high)] flex flex-col items-center justify-center p-6 text-center z-10">
-            <span class="material-symbols-rounded text-4xl text-[var(--md-sys-color-primary)] mb-4">lock</span>
-            <p class="mb-4 text-sm text-[var(--md-sys-color-on-surface-variant)]">Чтобы писать сообщения, пожалуйста, войдите в аккаунт.</p>
-            <button onclick="login()" class="md-btn md-btn-filled">Войти через Google</button>
+    <!-- =========== NOTIFICATION (SNACKBAR STYLE) =========== -->
+    <div id="notification-modal" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none">
+        <div class="bg-[var(--md-sys-color-on-surface)] text-[var(--md-sys-color-surface)] px-6 py-3 rounded-lg shadow-lg flex items-center gap-4 min-w-[300px]">
+            <span id="notification-message" class="text-sm flex-grow">Сообщение отправлено</span>
+            <button onclick="closeNotification()" class="text-[var(--md-sys-color-primary-container)] text-sm font-bold hover:opacity-80">OK</button>
         </div>
     </div>
 
-    <!-- =========== REVIEW MODAL =========== -->
-    <div id="review-modal" class="md-dialog-overlay">
-        <div class="md-dialog">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl brand-font text-[var(--md-sys-color-on-surface)]">Ваш отзыв</h3>
-                <button onclick="closeReviewModal()" class="p-1"><span class="material-symbols-rounded">close</span></button>
-            </div>
-            
-            <div class="flex flex-col items-center gap-2 mb-6">
-                <p class="text-sm text-[var(--md-sys-color-on-surface-variant)]">Оцените нас</p>
-                <div class="star-rating" id="modal-stars">
-                    <i class="material-symbols-rounded" data-value="1">star</i>
-                    <i class="material-symbols-rounded" data-value="2">star</i>
-                    <i class="material-symbols-rounded" data-value="3">star</i>
-                    <i class="material-symbols-rounded" data-value="4">star</i>
-                    <i class="material-symbols-rounded" data-value="5">star</i>
-                </div>
-            </div>
+    <!-- =========== SCRIPTS =========== -->
+    <script>
+        const TELEGRAM_USERNAME = 'Taniko_67';
+        
+        // --- THEME SWITCHER LOGIC ---
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
 
-            <div class="md-input-group">
-                <textarea id="review-text" rows="4" class="md-input peer" placeholder=" "></textarea>
-                <label class="md-label">Текст отзыва</label>
-            </div>
-
-            <button onclick="submitReview()" class="md-btn md-btn-filled w-full">Отправить</button>
-        </div>
-    </div>
-
-    <!-- =========== FIREBASE & LOGIC =========== -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, query, orderBy, addDoc, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        // FIREBASE CONFIG
-        const firebaseConfig = {
-            apiKey: "AIzaSyA8roOb63vM_ZaBt11x8B1b132gQBiG29A",
-            authDomain: "shalf-aad46.firebaseapp.com",
-            projectId: "shalf-aad46",
-            storageBucket: "shalf-aad46.firebasestorage.app",
-            messagingSenderId: "131850620388",
-            appId: "1:131850620388:web:1afd6733af73f96af0cbf1",
-            measurementId: "G-XN22P9DJBZ"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const provider = new GoogleAuthProvider();
-
-        const APP_ID = 'shalf-aad46'; // Using projectId as identifier for structure
-        let currentUser = null;
-        let isAdmin = false;
-        let activeChatId = null; // For admin to know which chat is open
-        let chatUnsubscribe = null; // To stop listening when switching chats
-
-        // --- AUTH LOGIC ---
-        const loginBtn = document.getElementById('login-btn');
-        const userProfile = document.getElementById('user-profile');
-        const userAvatar = document.getElementById('user-avatar');
-        const userName = document.getElementById('user-name');
-        const logoutBtn = document.getElementById('logout-btn');
-        const chatLoginOverlay = document.getElementById('chat-login-overlay');
-
-        window.login = async () => {
-            try {
-                await signInWithPopup(auth, provider);
-            } catch (error) {
-                console.error("Login failed", error);
-                alert("Ошибка входа: " + error.message);
-            }
-        };
-
-        logoutBtn.addEventListener('click', () => signOut(auth));
-        loginBtn.addEventListener('click', window.login);
-
-        onAuthStateChanged(auth, async (user) => {
-            currentUser = user;
-            if (user) {
-                loginBtn.classList.add('hidden');
-                userProfile.classList.remove('hidden');
-                userAvatar.src = user.photoURL;
-                userName.textContent = user.displayName;
-                chatLoginOverlay.classList.add('hidden');
-                
-                // Check Admin Status
-                checkAdminStatus(user.uid);
-                
-                // Load user review if exists to populate modal
-                // loadUserReviewDraft(); 
-            } else {
-                loginBtn.classList.remove('hidden');
-                userProfile.classList.add('hidden');
-                chatLoginOverlay.classList.remove('hidden');
-                isAdmin = false;
-                resetChatUI();
-            }
-            loadReviews(); // Reload to update "Edit" buttons capability
-        });
-
-        async function checkAdminStatus(uid) {
-            // Check if user document exists in 'admins' collection
-            const adminDoc = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'admins', uid));
-            if (adminDoc.exists()) {
-                isAdmin = true;
-                console.log("Admin Logged In");
-                setupAdminChat();
-            } else {
-                isAdmin = false;
-                setupCustomerChat();
-            }
+        // Check local storage or system preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            htmlElement.classList.add('dark');
+            htmlElement.classList.remove('light');
+        } else {
+            htmlElement.classList.remove('dark');
+            htmlElement.classList.add('light');
         }
 
-        // --- REVIEWS LOGIC ---
-        const reviewsContainer = document.getElementById('reviews-container');
-        const reviewModal = document.getElementById('review-modal');
-        const modalStars = document.querySelectorAll('#modal-stars i');
-        let currentRating = 5;
-
-        // Render Stars Interaction
-        modalStars.forEach(star => {
-            star.addEventListener('click', () => {
-                currentRating = parseInt(star.dataset.value);
-                updateStarVisuals(currentRating);
-            });
+        themeToggleBtn.addEventListener('click', () => {
+            if (htmlElement.classList.contains('dark')) {
+                htmlElement.classList.remove('dark');
+                htmlElement.classList.add('light');
+                localStorage.setItem('theme', 'light');
+            } else {
+                htmlElement.classList.add('dark');
+                htmlElement.classList.remove('light');
+                localStorage.setItem('theme', 'dark');
+            }
         });
 
-        function updateStarVisuals(rating) {
-            modalStars.forEach(s => {
-                if (parseInt(s.dataset.value) <= rating) {
-                    s.classList.add('active', 'text-yellow-500');
-                    s.textContent = 'star'; // filled
+        // --- NAVIGATION LOGIC ---
+        const pages = document.querySelectorAll('.page-section');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileDrawerOverlay = document.getElementById('mobile-drawer-overlay');
+        const topBar = document.getElementById('top-bar');
+
+        function showPage(pageId) {
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Hide menu if open
+            closeMobileMenu();
+
+            // Switch content
+            pages.forEach(page => {
+                if (page.id === pageId) {
+                    page.classList.add('active');
+                    runAnimations(page);
                 } else {
-                    s.classList.remove('active', 'text-yellow-500');
-                    s.textContent = 'star'; // outline handled by font settings or color
-                    s.style.fontVariationSettings = "'FILL' 0";
+                    page.classList.remove('active');
                 }
-                if (parseInt(s.dataset.value) <= rating) s.style.fontVariationSettings = "'FILL' 1";
             });
-        }
 
-        window.openReviewModal = () => {
-            if (!currentUser) {
-                window.login();
-                return;
-            }
-            // Prefill if existing
-            const existingReview = document.getElementById(`review-card-${currentUser.uid}`);
-            if(existingReview) {
-                // Parse existing data from DOM (or better, fetch from DB, but DOM is faster for simple apps)
-                const text = existingReview.querySelector('.review-text').textContent;
-                const stars = existingReview.querySelectorAll('.material-symbols-rounded.text-yellow-500').length;
-                document.getElementById('review-text').value = text;
-                currentRating = stars;
-                updateStarVisuals(currentRating);
-            } else {
-                document.getElementById('review-text').value = '';
-                currentRating = 5;
-                updateStarVisuals(5);
-            }
-            reviewModal.classList.add('open');
-        };
-
-        window.closeReviewModal = () => reviewModal.classList.remove('open');
-
-        window.submitReview = async () => {
-            const text = document.getElementById('review-text').value;
-            if (!text.trim()) return alert("Напишите хоть пару слов!");
-
-            const reviewData = {
-                userId: currentUser.uid,
-                displayName: currentUser.displayName,
-                photoURL: currentUser.photoURL,
-                rating: currentRating,
-                text: text,
-                timestamp: serverTimestamp()
-            };
-
-            try {
-                // Save to: artifacts/{appId}/public/data/reviews/{userId}
-                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'reviews', currentUser.uid), reviewData);
-                closeReviewModal();
-                loadReviews(); // Refresh list
-            } catch (e) {
-                console.error("Error saving review", e);
-                alert("Ошибка сохранения.");
-            }
-        };
-
-        async function loadReviews() {
-            reviewsContainer.innerHTML = '<div class="col-span-full text-center py-4 opacity-50">Обновление...</div>';
-            
-            const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'reviews'), orderBy('timestamp', 'desc'));
-            const querySnapshot = await getDocs(q);
-            
-            reviewsContainer.innerHTML = '';
-            
-            if (querySnapshot.empty) {
-                reviewsContainer.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500">Пока нет отзывов. Станьте первым!</div>';
-                return;
-            }
-
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                const isMine = currentUser && data.userId === currentUser.uid;
-                
-                // Generate Stars HTML
-                let starsHtml = '';
-                for(let i=1; i<=5; i++) {
-                    starsHtml += `<span class="material-symbols-rounded text-lg ${i <= data.rating ? 'text-yellow-500' : 'text-gray-300'}" style="font-variation-settings: 'FILL' ${i<=data.rating ? 1 : 0}">star</span>`;
+            // Update Active State on Nav (Desktop)
+            navLinks.forEach(btn => {
+                if(btn.getAttribute('onclick').includes(pageId)) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
                 }
-
-                const cardHtml = `
-                    <div id="review-card-${data.userId}" class="md-card md-card-elevated p-6 flex flex-col h-full bg-[var(--md-sys-color-surface-container-low)]">
-                        <div class="flex items-center gap-4 mb-4">
-                            <img src="${data.photoURL || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full">
-                            <div>
-                                <h4 class="font-bold text-sm text-[var(--md-sys-color-on-surface)]">${data.displayName}</h4>
-                                <div class="flex">${starsHtml}</div>
-                            </div>
-                            ${isMine ? '<span class="ml-auto text-xs bg-[var(--md-sys-color-primary-container)] px-2 py-1 rounded text-[var(--md-sys-color-on-primary-container)]">Ваш отзыв</span>' : ''}
-                        </div>
-                        <p class="text-[var(--md-sys-color-on-surface-variant)] text-sm italic review-text flex-grow">"${data.text}"</p>
-                    </div>
-                `;
-                reviewsContainer.innerHTML += cardHtml;
             });
         }
 
-        // --- CHAT LOGIC ---
-        const chatWindow = document.getElementById('chat-window');
-        const chatMessages = document.getElementById('chat-messages');
-        const chatInput = document.getElementById('chat-input');
-        const sendBtn = document.getElementById('send-btn');
-        const adminChatList = document.getElementById('admin-chat-list');
-        const chatHeaderTitle = document.getElementById('chat-header-title');
-        const chatHeaderSubtitle = document.getElementById('chat-header-subtitle');
-
-        window.toggleChat = () => {
-            chatWindow.classList.toggle('open');
-            // Scroll to bottom
-            setTimeout(() => chatMessages.scrollTop = chatMessages.scrollHeight, 100);
-        };
-
-        window.openChatWithProduct = (productName) => {
-            if(!currentUser) {
-                window.login().then(() => {
-                    toggleChat();
-                    chatInput.value = `Здравствуйте! Меня интересует ${productName}.`;
-                });
-            } else {
-                toggleChat();
-                chatInput.value = `Здравствуйте! Меня интересует ${productName}.`;
-            }
-        };
-
-        function resetChatUI() {
-            chatMessages.innerHTML = '';
-            adminChatList.classList.add('hidden');
-            chatInput.disabled = true;
-        }
-
-        // 1. Customer Mode
-        function setupCustomerChat() {
-            activeChatId = currentUser.uid;
-            chatHeaderTitle.textContent = "Чат с продавцом";
-            chatHeaderSubtitle.textContent = "Обычно отвечаем в течение часа";
-            chatInput.disabled = false;
-            adminChatList.classList.add('hidden');
-            chatMessages.classList.remove('hidden');
-            chatInput.parentElement.classList.remove('hidden');
-
-            listenToChat(activeChatId);
-        }
-
-        // 2. Admin Mode
-        function setupAdminChat() {
-            chatHeaderTitle.textContent = "Админ-панель";
-            chatHeaderSubtitle.textContent = "Выберите диалог";
-            adminChatList.classList.remove('hidden');
-            chatMessages.classList.add('hidden'); // Hide messages until chat selected
-            chatInput.parentElement.classList.add('hidden');
-            
-            // Listen to ALL chats (In a real app, query by 'lastUpdated')
-            // Using a simple list of documents in 'chats' collection
-            const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'chats'), orderBy('lastUpdated', 'desc'));
-            
-            onSnapshot(q, (snapshot) => {
-                adminChatList.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const item = document.createElement('div');
-                    item.className = "p-4 border-b border-[var(--md-sys-color-outline-variant)] hover:bg-[var(--md-sys-color-surface-container-high)] cursor-pointer flex justify-between items-center";
-                    item.innerHTML = `
-                        <div>
-                            <div class="font-bold text-sm">${data.userName || 'User'}</div>
-                            <div class="text-xs text-[var(--md-sys-color-on-surface-variant)] truncate w-48">${data.lastMessage}</div>
-                        </div>
-                        <span class="text-[10px] opacity-50">${data.lastUpdated ? new Date(data.lastUpdated.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}</span>
-                    `;
-                    item.onclick = () => openAdminChat(doc.id, data.userName);
-                    adminChatList.appendChild(item);
-                });
-            });
-        }
-
-        function openAdminChat(userId, userName) {
-            activeChatId = userId;
-            chatHeaderTitle.textContent = userName;
-            chatHeaderSubtitle.textContent = "Клиент";
-            
-            adminChatList.classList.add('hidden');
-            chatMessages.classList.remove('hidden');
-            chatInput.parentElement.classList.remove('hidden');
-            
-            // Add back button logic to header if needed, for now toggle closes app
-            
-            listenToChat(userId);
-        }
-
-        // Common Listener
-        function listenToChat(chatId) {
-            if(chatUnsubscribe) chatUnsubscribe();
-            
-            const messagesRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'chats', chatId, 'messages');
-            const q = query(messagesRef, orderBy('timestamp', 'asc'));
-
-            chatUnsubscribe = onSnapshot(q, (snapshot) => {
-                chatMessages.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const msg = doc.data();
-                    const isMine = msg.senderId === currentUser.uid;
-                    
-                    const bubble = document.createElement('div');
-                    bubble.className = `chat-bubble ${isMine ? 'mine' : 'theirs'}`;
-                    bubble.textContent = msg.text;
-                    chatMessages.appendChild(bubble);
-                });
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            });
-        }
-
-        // Send Message
-        async function sendMessage() {
-            const text = chatInput.value.trim();
-            if(!text || !activeChatId || !currentUser) return;
-
-            chatInput.value = '';
-
-            const chatDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'chats', activeChatId);
-            const messagesColRef = collection(chatDocRef, 'messages');
-
-            try {
-                // 1. Add message
-                await addDoc(messagesColRef, {
-                    text: text,
-                    senderId: currentUser.uid,
-                    senderName: currentUser.displayName,
-                    timestamp: serverTimestamp()
-                });
-
-                // 2. Update chat meta data (for Admin list)
-                // If I am customer, I set my name. If I am admin, I don't overwrite user name.
-                const updateData = {
-                    lastMessage: text,
-                    lastUpdated: serverTimestamp()
-                };
-                
-                if (!isAdmin) {
-                    updateData.userName = currentUser.displayName;
-                    updateData.userId = currentUser.uid;
-                }
-
-                await setDoc(chatDocRef, updateData, { merge: true });
-
-            } catch (error) {
-                console.error("Error sending", error);
-            }
-        }
-
-        sendBtn.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') sendMessage();
-        });
-
-        // --- GENERAL UI ---
-        // Preloader
-        document.addEventListener('DOMContentLoaded', () => {
-             setTimeout(() => {
-                document.getElementById('preloader').classList.add('opacity-0', 'pointer-events-none');
-            }, 2500);
-            
-            loadReviews(); // Initial load (read-only)
-        });
-
-        // Page Navigation
-        window.showPage = (pageId) => {
-            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
-            const active = document.getElementById(pageId);
-            if(active) active.classList.add('active');
-            
-            document.getElementById('mobile-menu').classList.add('-translate-x-full');
-            document.getElementById('mobile-drawer-overlay').classList.add('hidden');
-            window.scrollTo({top: 0, behavior: 'smooth'});
-        };
-
-        // Theme Toggle
-        document.getElementById('theme-toggle').addEventListener('click', () => {
-            const html = document.documentElement;
-            if(html.classList.contains('dark')) {
-                html.classList.remove('dark');
-                html.classList.add('light');
-            } else {
-                html.classList.add('dark');
-                html.classList.remove('light');
-            }
-        });
-
-        // Mobile Menu
+        // --- MOBILE MENU ---
         document.getElementById('mobile-menu-btn').addEventListener('click', () => {
-            document.getElementById('mobile-menu').classList.remove('-translate-x-full');
-            document.getElementById('mobile-drawer-overlay').classList.remove('hidden', 'opacity-0');
-        });
-        document.getElementById('close-menu-btn').addEventListener('click', () => {
-             document.getElementById('mobile-menu').classList.add('-translate-x-full');
-             document.getElementById('mobile-drawer-overlay').classList.add('hidden');
-        });
-        document.getElementById('mobile-drawer-overlay').addEventListener('click', () => {
-             document.getElementById('mobile-menu').classList.add('-translate-x-full');
-             document.getElementById('mobile-drawer-overlay').classList.add('hidden');
+            mobileMenu.classList.remove('-translate-x-full');
+            mobileDrawerOverlay.classList.remove('hidden');
+            // Small delay for fade in
+            setTimeout(() => mobileDrawerOverlay.classList.remove('opacity-0'), 10);
         });
 
+        function closeMobileMenu() {
+            mobileMenu.classList.add('-translate-x-full');
+            mobileDrawerOverlay.classList.add('opacity-0');
+            setTimeout(() => mobileDrawerOverlay.classList.add('hidden'), 300);
+        }
+
+        document.getElementById('close-menu-btn').addEventListener('click', closeMobileMenu);
+        mobileDrawerOverlay.addEventListener('click', closeMobileMenu);
+
+        // --- SCROLL EFFECT TOP BAR ---
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 20) {
+                topBar.classList.add('scrolled');
+            } else {
+                topBar.classList.remove('scrolled');
+            }
+        });
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const preloader = document.getElementById('preloader');
+            
+            // Artificial delay to show logo animation
+            setTimeout(() => {
+                preloader.classList.add('opacity-0', 'pointer-events-none');
+            }, 2500);
+
+            showPage('home');
+            initializeCardSliders();
+        });
+
+        // --- NOTIFICATIONS ---
+        function showNotification(message) {
+            const modal = document.getElementById('notification-modal');
+            document.getElementById('notification-message').textContent = message;
+            modal.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
+            
+            setTimeout(() => closeNotification(), 4000);
+        }
+
+        function closeNotification() {
+            const modal = document.getElementById('notification-modal');
+            modal.classList.add('translate-y-10', 'opacity-0', 'pointer-events-none');
+        }
+
+        // --- TELEGRAM ---
+        function redirectToTelegram(text) {
+            const encodedText = encodeURIComponent(text);
+            const url = `https://t.me/${TELEGRAM_USERNAME}?text=${encodedText}`;
+            window.open(url, '_blank');
+        }
+
+        function signUpViaTelegram(msg) {
+            redirectToTelegram(msg);
+        }
+
+        // --- FORMS ---
+        document.getElementById('rental-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const message = `🛎️ Новая заявка на аренду:\n\n👤 ${form.elements.name.value}\n📞 ${form.elements.phone.value}\n👘 ${form.elements.costume.value}\n🗓 ${form.elements.dates.value}`;
+            redirectToTelegram(message);
+            form.reset();
+            showNotification('Переходим в Telegram...');
+        });
+        
+        document.getElementById('contact-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const message = `📝 Сообщение с сайта:\n\n👤 ${form.elements.name.value}\n📧 ${form.elements.email.value}\n💬 ${form.elements.message.value}`;
+            redirectToTelegram(message);
+            form.reset();
+            showNotification('Переходим в Telegram...');
+        });
+
+        // --- ANIMATIONS ON SCROLL ---
+        const observer = new IntersectionObserver((entries, observerInstance) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const el = entry.target;
+                    const delay = el.dataset.delay || 0;
+                    setTimeout(() => {
+                        el.classList.add('is-visible');
+                    }, delay);
+                    observerInstance.unobserve(el);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        function runAnimations(container) {
+            const animatedElements = container.querySelectorAll('[data-animate]');
+            animatedElements.forEach(el => {
+                el.classList.remove('is-visible');
+                observer.observe(el);
+            });
+        }
+
+        // --- SLIDERS (UPDATED VISUALS) ---
+        function initializeCardSliders() {
+            const sliderContainers = document.querySelectorAll('[data-slider-id]');
+
+            sliderContainers.forEach(container => {
+                const slides = container.querySelectorAll('.slide');
+                const prevBtn = container.querySelector('.slider-prev');
+                const nextBtn = container.querySelector('.slider-next');
+                const dotsContainer = container.querySelector('.dots-container');
+                
+                if (!slides.length || !dotsContainer) return;
+                
+                const dots = dotsContainer.querySelectorAll('.dot');
+                let currentSlide = 0;
+
+                function showSlide(n) {
+                    if (n >= slides.length) currentSlide = 0;
+                    else if (n < 0) currentSlide = slides.length - 1;
+                    else currentSlide = n;
+
+                    // Fade effect
+                    slides.forEach(slide => {
+                        slide.classList.remove('active');
+                        slide.classList.remove('opacity-100');
+                        slide.classList.add('opacity-0');
+                        slide.style.zIndex = 0;
+                    });
+                    
+                    slides[currentSlide].classList.add('active');
+                    slides[currentSlide].classList.remove('opacity-0');
+                    slides[currentSlide].classList.add('opacity-100');
+                    slides[currentSlide].style.zIndex = 10;
+
+                    // Dots logic
+                    dots.forEach(dot => dot.classList.remove('active'));
+                    if (dots[currentSlide]) dots[currentSlide].classList.add('active');
+                }
+
+                prevBtn.addEventListener('click', (e) => { e.stopPropagation(); showSlide(currentSlide - 1); });
+                nextBtn.addEventListener('click', (e) => { e.stopPropagation(); showSlide(currentSlide + 1); });
+                
+                // Allow clicking image to advance
+                container.addEventListener('click', () => showSlide(currentSlide + 1));
+
+                showSlide(0);
+            });
+        }
     </script>
 </body>
 </html>
