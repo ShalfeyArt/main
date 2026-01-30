@@ -297,8 +297,8 @@
                 <button id="mobile-menu-btn" class="md-icon-btn md:hidden">
                     <span class="material-symbols-rounded">menu</span>
                 </button>
-                <!-- Используем navigateTo для логотипа -->
-                <a href="/home" class="flex items-center gap-3 group prevent-default" onclick="navigateTo('home', event)">
+                <!-- Используем href с хешем -->
+                <a href="#home" class="flex items-center gap-3 group prevent-default" onclick="navigateTo('home', event)">
                     <div class="h-10 w-10 rounded-full overflow-hidden shadow-sm border border-[var(--md-sys-color-outline-variant)]">
                         <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/2499.jpg" alt="Логотип" class="h-full w-full object-cover">
                     </div>
@@ -734,23 +734,34 @@
     <script>
         const TELEGRAM_USERNAME = 'Taniko_67';
 
-        // --- ROUTING CONFIGURATION ---
-        // Карта соответствия: URL путь -> ID секции
-        const ROUTE_MAP = {
-            '/': 'home',
-            '/home': 'home',
-            '/rentals': 'rentals',
-            '/master-classes': 'workshops', // Запрошенный URL
-            '/handmade': 'handmade',
-            '/about': 'about',
-            '/contacts': 'contacts'
+        // --- ROUTING CONFIGURATION (HASH BASED) ---
+        // ИСПРАВЛЕНИЕ 404: Используем HASH (#) для навигации.
+        // Это гарантирует, что при перезагрузке сервер всегда отдаст index.html,
+        // а JS уже сам разберется, какую секцию показать.
+        
+        // Карта: ХЕШ (URL) -> ID СЕКЦИИ
+        const ROUTES = {
+            '': 'home',               // Если хеша нет
+            '#home': 'home',
+            '#rentals': 'rentals',
+            '#master-classes': 'workshops', // URL будет /#master-classes, а откроет секцию workshops
+            '#handmade': 'handmade',
+            '#about': 'about',
+            '#contacts': 'contacts'
         };
+
+        // Вспомогательная функция: Получить хеш по ID секции (для кнопок)
+        function getHashFromId(id) {
+            for (const [hash, sectionId] of Object.entries(ROUTES)) {
+                if (sectionId === id && hash !== '') return hash;
+            }
+            return '#home';
+        }
 
         // --- THEME SWITCHER LOGIC ---
         const themeToggleBtn = document.getElementById('theme-toggle');
         const htmlElement = document.documentElement;
 
-        // Check local storage or system preference
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             htmlElement.classList.add('dark');
@@ -779,35 +790,28 @@
         const mobileDrawerOverlay = document.getElementById('mobile-drawer-overlay');
         const topBar = document.getElementById('top-bar');
 
-        // Helper to get ID from URL
-        function getSectionIdFromUrl() {
-            const path = window.location.pathname;
-            // Проверяем точное совпадение
-            if (ROUTE_MAP[path]) return ROUTE_MAP[path];
-            // Если слэш в конце
-            const cleanPath = path.endsWith('/') ? path.slice(0, -1) : path;
-             if (ROUTE_MAP[cleanPath]) return ROUTE_MAP[cleanPath];
-            // Дефолт
-            return 'home';
-        }
-
-        // Helper to get URL from ID
-        function getUrlFromSectionId(id) {
-            return Object.keys(ROUTE_MAP).find(key => ROUTE_MAP[key] === id) || '/home';
-        }
-
-        // Main Navigation Function
+        // Main Navigation Function (Triggered by clicks)
         function navigateTo(pageId, event) {
             if(event) event.preventDefault();
             
-            // Update URL without reload
-            const url = getUrlFromSectionId(pageId);
-            history.pushState({ pageId: pageId }, '', url);
+            // Находим нужный хеш для этого ID
+            const targetHash = getHashFromId(pageId);
             
+            // Просто меняем хеш. Браузер сам вызовет событие 'hashchange'
+            window.location.hash = targetHash;
+        }
+
+        // Render the View (Triggered by hash change or load)
+        function handleLocation() {
+            // Берем текущий хеш, или #home если пусто
+            const hash = window.location.hash || '#home';
+            
+            // Находим ID секции в нашей карте, или 'home' если хеш неизвестен
+            const pageId = ROUTES[hash] || 'home'; 
+
             renderPage(pageId);
         }
 
-        // Render the View
         function renderPage(pageId) {
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -825,19 +829,15 @@
 
             // Update Active State on Nav
             navLinks.forEach(btn => {
-                if(btn.getAttribute('onclick').includes(`'${pageId}'`)) {
+                // Проверяем, ведет ли кнопка на текущую страницу
+                const onClickAttr = btn.getAttribute('onclick');
+                if(onClickAttr && onClickAttr.includes(`'${pageId}'`)) {
                     btn.classList.add('active');
                 } else {
                     btn.classList.remove('active');
                 }
             });
         }
-
-        // Handle Browser Back/Forward Buttons
-        window.addEventListener('popstate', (event) => {
-            const pageId = event.state ? event.state.pageId : getSectionIdFromUrl();
-            renderPage(pageId);
-        });
 
         // --- MOBILE MENU ---
         document.getElementById('mobile-menu-btn').addEventListener('click', () => {
@@ -868,20 +868,17 @@
                 preloader.classList.add('opacity-0', 'pointer-events-none');
             }, 2500);
 
-            // Initial Route Check
-            const initialId = getSectionIdFromUrl();
-            renderPage(initialId);
+            // Слушаем изменения хеша в URL
+            window.addEventListener('hashchange', handleLocation);
             
-            // Replace History State to handle refresh cleanly
-            const initialUrl = getUrlFromSectionId(initialId);
-            history.replaceState({ pageId: initialId }, '', initialUrl);
+            // Запускаем роутинг при первой загрузке
+            handleLocation();
 
             initializeCardSliders();
             
             // Prevent default link clicks for internal navigation
             document.querySelectorAll('a.prevent-default').forEach(link => {
                 link.addEventListener('click', function(e) {
-                   // Logic handled in inline onclick, just prevent standard href
                    e.preventDefault(); 
                 });
             });
