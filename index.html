@@ -42,8 +42,10 @@
             --md-sys-color-outline: #75796C;
             --md-sys-color-outline-variant: #C5C8BA;
             
-            --md-elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
-            --md-elevation-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+            /* MD3 Elevation Shadows */
+            --md-elevation-1: 0px 1px 3px 0px rgba(0, 0, 0, 0.12), 0px 1px 2px 0px rgba(0, 0, 0, 0.24);
+            --md-elevation-2: 0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --md-elevation-3: 0px 10px 15px -3px rgba(0, 0, 0, 0.1), 0px 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
         html.dark {
@@ -66,8 +68,10 @@
             --md-sys-color-outline: #8F9285;
             --md-sys-color-outline-variant: #44483D;
 
-            --md-elevation-1: 0px 1px 2px 0px rgba(0,0,0,0.3); 
-            --md-elevation-2: 0px 2px 6px 2px rgba(0,0,0,0.3);
+            /* Dark mode shadows are subtler or non-existent in strict MD3, 
+               but we keep soft ones for depth perception on screens */
+            --md-elevation-1: 0px 1px 2px 0px rgba(0,0,0,0.5); 
+            --md-elevation-2: 0px 4px 8px 3px rgba(0,0,0,0.4);
         }
 
         /* Base Settings */
@@ -169,27 +173,34 @@
             font-weight: 700;
         }
 
-        /* Cards */
+        /* Cards - MD3 Style (Cleaner, no borders) */
         .md-card {
             background-color: var(--md-sys-color-surface-container-low);
             border-radius: 24px;
             overflow: hidden;
-            transition: transform 0.3s, box-shadow 0.3s;
-            border: 1px solid transparent;
-        }
-        .md-card-elevated {
+            transition: transform 0.3s cubic-bezier(0.2, 0.0, 0, 1.0), box-shadow 0.3s cubic-bezier(0.2, 0.0, 0, 1.0);
+            /* Removed border: 1px solid ... */
+            border: none;
             box-shadow: var(--md-elevation-1);
         }
+        
+        /* Dark mode card tweaks */
         html.dark .md-card-elevated {
+             /* Use lighter surface color for elevation instead of shadow/border */
              background-color: var(--md-sys-color-surface-container);
-             border: 1px solid var(--md-sys-color-outline-variant);
-             box-shadow: none;
+             border: none;
+             /* Very subtle shadow for separation */
+             box-shadow: 0px 1px 2px rgba(0,0,0,0.3);
         }
+
         .md-card:hover {
             transform: translateY(-4px);
             box-shadow: var(--md-elevation-2);
         }
-        html.dark .md-card:hover { box-shadow: 0 0 0 1px var(--md-sys-color-outline); }
+        /* In dark mode, hover just increases elevation/shadow slightly */
+        html.dark .md-card:hover { 
+            box-shadow: 0px 4px 8px rgba(0,0,0,0.5); 
+        }
 
         /* Inputs */
         .md-input-group { position: relative; margin-bottom: 1rem; }
@@ -263,9 +274,55 @@
         [data-animate="fade-up"] { transform: translateY(30px); }
         [data-animate="zoom-in"] { transform: scale(0.92); }
 
-        /* Slider */
-        .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--md-sys-color-surface-variant); transition: 0.3s; }
-        .dot.active { width: 24px; border-radius: 6px; background: var(--md-sys-color-primary); }
+        /* Slider Controls */
+        .slider-nav-btn {
+            background-color: rgba(0, 0, 0, 0.3);
+            color: white;
+            backdrop-filter: blur(4px);
+            transition: background-color 0.2s;
+        }
+        .slider-nav-btn:hover {
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+
+        /* === SLIDER DOTS (NEW MD3 STYLE) === */
+        .dots-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px; /* Space between dots */
+            padding-bottom: 16px; /* Lift from bottom edge */
+        }
+
+        .dot { 
+            width: 8px; 
+            height: 8px; 
+            border-radius: 50%; 
+            /* Opaque grey for inactive */
+            background-color: #E2E3DD; 
+            /* Subtle shadow to make it visible on white images */
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            transition: all 0.4s cubic-bezier(0.2, 0.0, 0, 1.0); 
+            opacity: 1;
+            border: none;
+        }
+        
+        /* Dark theme override for inactive dots if needed, 
+           though light grey works well on dark images usually */
+        html.dark .dot {
+            background-color: #444746;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.1); /* Tiny border for contrast on black */
+        }
+
+        .dot.active { 
+            /* Pill Shape */
+            width: 32px; 
+            height: 10px;
+            border-radius: 100px; 
+            /* Active color: Primary Container (Light Green) */
+            background-color: var(--md-sys-color-primary-container); 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
 
         /* Preloader */
         #preloader { background-color: var(--md-sys-color-surface); }
@@ -403,9 +460,13 @@
                         <div class="slide active absolute inset-0 transition-opacity duration-500 opacity-100 z-10"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/blackgold-demonstraciyanakidkiteploy.jpg" class="w-full h-full object-cover"></div>
                         <div class="slide absolute inset-0 transition-opacity duration-500 opacity-0 z-0"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/blackgold-smitritvzerkalodemonstriuyakorony.jpg" class="w-full h-full object-cover"></div>
                         <div class="slide absolute inset-0 transition-opacity duration-500 opacity-0 z-0"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/blackgold-vplonyrost.jpg" class="w-full h-full object-cover"></div>
-                        <button class="slider-prev absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/30 text-white backdrop-blur-sm flex items-center justify-center hover:bg-black/50"><span class="material-symbols-rounded">chevron_left</span></button>
-                        <button class="slider-next absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/30 text-white backdrop-blur-sm flex items-center justify-center hover:bg-black/50"><span class="material-symbols-rounded">chevron_right</span></button>
-                        <div class="absolute bottom-4 left-0 right-0 z-20 flex justify-center gap-2 dots-container"><div class="dot active"></div><div class="dot"></div><div class="dot"></div></div>
+                        
+                        <button class="slider-prev slider-nav-btn absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center"><span class="material-symbols-rounded">chevron_left</span></button>
+                        <button class="slider-next slider-nav-btn absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center"><span class="material-symbols-rounded">chevron_right</span></button>
+                        
+                        <div class="absolute bottom-0 left-0 right-0 z-20 dots-container">
+                            <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+                        </div>
                     </div>
                     <div class="p-6 flex flex-col flex-grow">
                         <h4 class="text-2xl brand-font font-bold text-on-surface">Темное золото</h4>
@@ -424,9 +485,13 @@
                     <div class="relative h-80 w-full bg-gray-200 card-slider-container" data-slider-id="costume-red">
                         <div class="slide active absolute inset-0 transition-opacity duration-500 opacity-100"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kostum%20krasny%20plasch%20eshe%20photo.jpg" class="w-full h-full object-cover"></div>
                         <div class="slide absolute inset-0 transition-opacity duration-500 opacity-0"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/krashy%20plasch%20kostum.jpg" class="w-full h-full object-cover"></div>
-                        <button class="slider-prev absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/30 text-white backdrop-blur-sm flex items-center justify-center hover:bg-black/50"><span class="material-symbols-rounded">chevron_left</span></button>
-                        <button class="slider-next absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/30 text-white backdrop-blur-sm flex items-center justify-center hover:bg-black/50"><span class="material-symbols-rounded">chevron_right</span></button>
-                        <div class="absolute bottom-4 left-0 right-0 z-20 flex justify-center gap-2 dots-container"><div class="dot active"></div><div class="dot"></div></div>
+                        
+                        <button class="slider-prev slider-nav-btn absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center"><span class="material-symbols-rounded">chevron_left</span></button>
+                        <button class="slider-next slider-nav-btn absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center"><span class="material-symbols-rounded">chevron_right</span></button>
+                        
+                        <div class="absolute bottom-0 left-0 right-0 z-20 dots-container">
+                            <div class="dot active"></div><div class="dot"></div>
+                        </div>
                     </div>
                     <div class="p-6 flex flex-col flex-grow">
                         <h4 class="text-2xl brand-font font-bold text-on-surface">Красная мантия</h4>
@@ -446,9 +511,13 @@
                         <div class="slide active absolute inset-0 transition-opacity duration-500 opacity-100"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/vedmochka2.jpg" class="w-full h-full object-cover"></div>
                         <div class="slide absolute inset-0 transition-opacity duration-500 opacity-0"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/vedmochka1.jpg" class="w-full h-full object-cover"></div>
                         <div class="slide absolute inset-0 transition-opacity duration-500 opacity-0"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/esche%20vedmochki.jpg" class="w-full h-full object-cover"></div>
-                        <button class="slider-prev absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/30 text-white backdrop-blur-sm flex items-center justify-center hover:bg-black/50"><span class="material-symbols-rounded">chevron_left</span></button>
-                        <button class="slider-next absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/30 text-white backdrop-blur-sm flex items-center justify-center hover:bg-black/50"><span class="material-symbols-rounded">chevron_right</span></button>
-                        <div class="absolute bottom-4 left-0 right-0 z-20 flex justify-center gap-2 dots-container"><div class="dot active"></div><div class="dot"></div><div class="dot"></div></div>
+                        
+                        <button class="slider-prev slider-nav-btn absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center"><span class="material-symbols-rounded">chevron_left</span></button>
+                        <button class="slider-next slider-nav-btn absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center"><span class="material-symbols-rounded">chevron_right</span></button>
+                        
+                        <div class="absolute bottom-0 left-0 right-0 z-20 dots-container">
+                            <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+                        </div>
                     </div>
                     <div class="p-6 flex flex-col flex-grow">
                         <h4 class="text-2xl brand-font font-bold text-on-surface">Лесная ведунья</h4>
@@ -972,7 +1041,8 @@
 
                 container.querySelector('.slider-prev').addEventListener('click', (e) => { e.stopPropagation(); showSlide(currentSlide - 1); });
                 container.querySelector('.slider-next').addEventListener('click', (e) => { e.stopPropagation(); showSlide(currentSlide + 1); });
-                container.addEventListener('click', () => showSlide(currentSlide + 1));
+                // Optional: Click on image to advance
+                // container.addEventListener('click', () => showSlide(currentSlide + 1));
                 showSlide(0);
             });
         }
