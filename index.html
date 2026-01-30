@@ -53,7 +53,7 @@
             --md-sys-color-primary: #B1D188;
             --md-sys-color-on-primary: #1F3701;
             --md-sys-color-primary-container: #354E16;
-            --md-sys-color-on-primary-container: #CDEDA3;
+            --md-sys-color-on-primary-container: #CDEDA3; /* Это яркий салатовый цвет для текста на контейнере */
             --md-sys-color-secondary-container: #404A33;
             --md-sys-color-on-secondary-container: #DCE7C8;
             --md-sys-color-tertiary: #A0D0CB;
@@ -68,8 +68,7 @@
             --md-sys-color-outline: #8F9285;
             --md-sys-color-outline-variant: #44483D;
 
-            /* Dark mode shadows are subtler or non-existent in strict MD3, 
-               but we keep soft ones for depth perception on screens */
+            /* Dark mode shadows */
             --md-elevation-1: 0px 1px 2px 0px rgba(0,0,0,0.5); 
             --md-elevation-2: 0px 4px 8px 3px rgba(0,0,0,0.4);
         }
@@ -101,25 +100,11 @@
             margin-left: -12px;
         }
 
-        /* Light Mode State: Sun visible, Moon hidden */
-        html.light .icon-sun {
-            opacity: 0;
-            transform: rotate(-90deg) scale(0.5);
-        }
-        html.light .icon-moon {
-            opacity: 1;
-            transform: rotate(0) scale(1);
-        }
+        html.light .icon-sun { opacity: 0; transform: rotate(-90deg) scale(0.5); }
+        html.light .icon-moon { opacity: 1; transform: rotate(0) scale(1); }
 
-        /* Dark Mode State: Sun visible, Moon hidden */
-        html.dark .icon-sun {
-            opacity: 1;
-            transform: rotate(0) scale(1);
-        }
-        html.dark .icon-moon {
-            opacity: 0;
-            transform: rotate(90deg) scale(0.5);
-        }
+        html.dark .icon-sun { opacity: 1; transform: rotate(0) scale(1); }
+        html.dark .icon-moon { opacity: 0; transform: rotate(90deg) scale(0.5); }
 
 
         /* Buttons */
@@ -173,23 +158,19 @@
             font-weight: 700;
         }
 
-        /* Cards - MD3 Style (Cleaner, no borders) */
+        /* Cards - MD3 Style */
         .md-card {
             background-color: var(--md-sys-color-surface-container-low);
             border-radius: 24px;
             overflow: hidden;
             transition: transform 0.3s cubic-bezier(0.2, 0.0, 0, 1.0), box-shadow 0.3s cubic-bezier(0.2, 0.0, 0, 1.0);
-            /* Removed border: 1px solid ... */
             border: none;
             box-shadow: var(--md-elevation-1);
         }
         
-        /* Dark mode card tweaks */
         html.dark .md-card-elevated {
-             /* Use lighter surface color for elevation instead of shadow/border */
              background-color: var(--md-sys-color-surface-container);
              border: none;
-             /* Very subtle shadow for separation */
              box-shadow: 0px 1px 2px rgba(0,0,0,0.3);
         }
 
@@ -197,7 +178,6 @@
             transform: translateY(-4px);
             box-shadow: var(--md-elevation-2);
         }
-        /* In dark mode, hover just increases elevation/shadow slightly */
         html.dark .md-card:hover { 
             box-shadow: 0px 4px 8px rgba(0,0,0,0.5); 
         }
@@ -256,7 +236,7 @@
             border: none;
             background: transparent;
             cursor: pointer;
-            position: relative; /* Needed for theme toggle absolute icons */
+            position: relative;
             overflow: hidden;
         }
         .md-icon-btn:hover { background-color: rgba(var(--md-sys-color-on-surface), 0.08); }
@@ -285,43 +265,49 @@
             background-color: rgba(0, 0, 0, 0.6);
         }
 
-        /* === SLIDER DOTS (NEW MD3 STYLE) === */
+        /* === SLIDER DOTS (FIXED FOR DARK MODE) === */
         .dots-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px; /* Space between dots */
-            padding-bottom: 16px; /* Lift from bottom edge */
+            gap: 8px;
+            padding-bottom: 16px;
         }
 
         .dot { 
             width: 8px; 
             height: 8px; 
             border-radius: 50%; 
-            /* Opaque grey for inactive */
             background-color: #E2E3DD; 
-            /* Subtle shadow to make it visible on white images */
             box-shadow: 0 1px 2px rgba(0,0,0,0.3);
             transition: all 0.4s cubic-bezier(0.2, 0.0, 0, 1.0); 
             opacity: 1;
             border: none;
         }
         
-        /* Dark theme override for inactive dots if needed, 
-           though light grey works well on dark images usually */
         html.dark .dot {
             background-color: #444746;
-            box-shadow: 0 0 0 1px rgba(255,255,255,0.1); /* Tiny border for contrast on black */
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
         }
 
         .dot.active { 
-            /* Pill Shape */
             width: 32px; 
             height: 10px;
             border-radius: 100px; 
-            /* Active color: Primary Container (Light Green) */
+            /* LIGHT MODE: Standard primary container */
             background-color: var(--md-sys-color-primary-container); 
             box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+
+        /* DARK MODE OVERRIDE FOR ACTIVE DOT */
+        html.dark .dot.active {
+            /* В темной теме Primary Container (#354E16) слишком темный.
+               Мы берем Primary (#B1D188) или OnPrimaryContainer (#CDEDA3)
+               чтобы капсула "светилась" как на скриншоте.
+            */
+            background-color: var(--md-sys-color-primary); 
+            /* Добавляем легкое свечение для выразительности */
+            box-shadow: 0 0 8px rgba(177, 209, 136, 0.3); 
         }
 
         /* Preloader */
@@ -339,10 +325,14 @@
 <body class="antialiased min-h-screen flex flex-col selection:bg-[var(--md-sys-color-primary-container)] selection:text-[var(--md-sys-color-on-primary-container)]">
 
     <!-- =========== PRELOADER =========== -->
-    <div id="preloader" class="fixed inset-0 z-[100] flex justify-center items-center transition-opacity duration-700 ease-out">
-        <svg id="preloader-logo" class="w-32 h-32" viewBox="0 0 200 200">
-            <path class="sage-path" d="M100 180 V 50 M100 130 C75 125 75 155 100 150 M100 130 C125 125 125 155 100 150 M100 100 C80 95 80 120 100 115 M100 100 C120 95 120 120 100 115 M100 75 C90 70 90 90 100 85 M100 75 C110 70 110 90 100 85 M80 160 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 M120,165 a4,4 0 1,0 -8,0 a4,4 0 1,0 8,0 M75 90 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+    <!-- Removed duration-700 to control it manually with js logic -->
+    <div id="preloader" class="fixed inset-0 z-[100] flex justify-center items-center transition-opacity duration-500 ease-out">
+        <div class="flex flex-col items-center">
+            <svg id="preloader-logo" class="w-32 h-32 mb-4" viewBox="0 0 200 200">
+                <path class="sage-path" d="M100 180 V 50 M100 130 C75 125 75 155 100 150 M100 130 C125 125 125 155 100 150 M100 100 C80 95 80 120 100 115 M100 100 C120 95 120 120 100 115 M100 75 C90 70 90 90 100 85 M100 75 C110 70 110 90 100 85 M80 160 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 M120,165 a4,4 0 1,0 -8,0 a4,4 0 1,0 8,0 M75 90 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="text-primary font-medium tracking-wider text-sm opacity-0 transition-opacity duration-300" id="loading-text">Загрузка вдохновения...</div>
+        </div>
     </div>
 
     <!-- =========== APP BAR =========== -->
@@ -354,7 +344,6 @@
                 <button id="mobile-menu-btn" class="md-icon-btn md:hidden">
                     <span class="material-symbols-rounded">menu</span>
                 </button>
-                <!-- Используем href с хешем -->
                 <a href="#home" class="flex items-center gap-3 group prevent-default" onclick="navigateTo('home', event)">
                     <div class="h-10 w-10 rounded-full overflow-hidden shadow-sm border border-[var(--md-sys-color-outline-variant)]">
                         <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/2499.jpg" alt="Логотип" class="h-full w-full object-cover">
@@ -376,7 +365,6 @@
             <!-- Actions (Theme Toggle) -->
             <div class="flex items-center">
                 <button id="theme-toggle" class="md-icon-btn" aria-label="Переключить тему">
-                    <!-- Иконки для анимации -->
                     <span class="material-symbols-rounded theme-icon icon-sun">light_mode</span>
                     <span class="material-symbols-rounded theme-icon icon-moon">dark_mode</span>
                 </button>
@@ -930,28 +918,68 @@
             else topBar.classList.remove('scrolled');
         });
 
-        // --- INITIALIZATION ---
+        // --- INITIALIZATION & TRUE PRELOADER ---
         document.addEventListener('DOMContentLoaded', () => {
-            const preloader = document.getElementById('preloader');
-            setTimeout(() => {
-                preloader.classList.add('opacity-0', 'pointer-events-none');
-            }, 2500);
-
-            // Слушаем изменения хеша в URL
-            window.addEventListener('hashchange', handleLocation);
-            
-            // Запускаем роутинг при первой загрузке
-            handleLocation();
-
-            initializeCardSliders();
-            
-            // Prevent default link clicks for internal navigation
-            document.querySelectorAll('a.prevent-default').forEach(link => {
-                link.addEventListener('click', function(e) {
-                   e.preventDefault(); 
-                });
-            });
+            initApp();
         });
+
+        async function initApp() {
+            const preloader = document.getElementById('preloader');
+            const loadingText = document.getElementById('loading-text');
+            
+            // Show loading text after a brief delay if loading takes time
+            const textTimeout = setTimeout(() => {
+                loadingText.classList.remove('opacity-0');
+            }, 500);
+
+            try {
+                // 1. Wait for Fonts to load
+                await document.fonts.ready;
+                console.log('Fonts loaded');
+
+                // 2. Wait for all images
+                // The window.onload event fires when all content (images, scripts, CSS) is loaded.
+                // However, we are already inside DOMContentLoaded, so we might need to check document.readyState
+                // or attach to window.load. To be robust, we use a Promise wrapper for window.load
+                
+                await new Promise((resolve) => {
+                    if (document.readyState === 'complete') {
+                        resolve();
+                    } else {
+                        window.addEventListener('load', resolve);
+                        // Fallback safety timeout (5 seconds max)
+                        setTimeout(resolve, 5000); 
+                    }
+                });
+                console.log('Images loaded');
+
+            } catch (e) {
+                console.warn("Error during loading:", e);
+            } finally {
+                // Clear text timeout
+                clearTimeout(textTimeout);
+                
+                // Hide preloader with a smooth fade out
+                preloader.classList.add('opacity-0', 'pointer-events-none');
+                
+                // Start the app logic after preloader is done
+                setTimeout(() => {
+                    // Слушаем изменения хеша в URL
+                    window.addEventListener('hashchange', handleLocation);
+                    // Запускаем роутинг
+                    handleLocation();
+                    
+                    initializeCardSliders();
+
+                    // Prevent default link clicks for internal navigation
+                    document.querySelectorAll('a.prevent-default').forEach(link => {
+                        link.addEventListener('click', function(e) {
+                           e.preventDefault(); 
+                        });
+                    });
+                }, 500); // Matches the preloader fade out duration
+            }
+        }
 
         // --- NOTIFICATIONS ---
         function showNotification(message) {
