@@ -9,83 +9,65 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Google Fonts: Roboto (Base), Caveat (Display/Brand) -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     
-    <!-- Material Symbols (Icons) & Font Awesome (Socials) -->
+    <!-- Icons -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
         /* =========================================
-           MATERIAL DESIGN 3 TOKEN SYSTEM
+           COLORS & VARIABLES
            ========================================= */
         :root {
-            /* --- PALETTE GENERATION (SEED: #8A9A5B - Sage Green) --- */
-            
-            /* LIGHT THEME */
+            /* Light Theme */
             --md-sys-color-primary: #4C662B;
             --md-sys-color-on-primary: #FFFFFF;
             --md-sys-color-primary-container: #CDEDA3;
             --md-sys-color-on-primary-container: #102000;
-            
-            --md-sys-color-secondary: #586249;
             --md-sys-color-secondary-container: #DCE7C8;
             --md-sys-color-on-secondary-container: #151E0B;
-
             --md-sys-color-tertiary: #386663;
             --md-sys-color-tertiary-container: #BCECE7;
             --md-sys-color-on-tertiary-container: #00201E;
-
-            --md-sys-color-surface: #FDFDF5; /* Warm White */
+            --md-sys-color-surface: #FDFDF5;
             --md-sys-color-on-surface: #1B1C18;
-            --md-sys-color-surface-variant: #E1E4D5;
+            --md-sys-color-surface-container: #F1F2E8;
+            --md-sys-color-surface-container-high: #ECECE2;
+            --md-sys-color-surface-container-low: #F7F8EE;
             --md-sys-color-on-surface-variant: #44483D;
             --md-sys-color-outline: #75796C;
             --md-sys-color-outline-variant: #C5C8BA;
-
-            --md-sys-color-surface-container-low: #F7F8EE;
-            --md-sys-color-surface-container: #F1F2E8;
-            --md-sys-color-surface-container-high: #ECECE2;
             
             --md-elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
             --md-elevation-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
-            --md-elevation-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px 0px rgba(0, 0, 0, 0.3);
         }
 
         html.dark {
-            /* DARK THEME */
+            /* Dark Theme */
             --md-sys-color-primary: #B1D188;
             --md-sys-color-on-primary: #1F3701;
             --md-sys-color-primary-container: #354E16;
             --md-sys-color-on-primary-container: #CDEDA3;
-
-            --md-sys-color-secondary: #C0CCAD;
             --md-sys-color-secondary-container: #404A33;
             --md-sys-color-on-secondary-container: #DCE7C8;
-
             --md-sys-color-tertiary: #A0D0CB;
             --md-sys-color-tertiary-container: #1F4E4B;
             --md-sys-color-on-tertiary-container: #BCECE7;
-
             --md-sys-color-surface: #13140F;
             --md-sys-color-on-surface: #E4E3DB;
-            --md-sys-color-surface-variant: #44483D;
+            --md-sys-color-surface-container: #1F201C;
+            --md-sys-color-surface-container-high: #2A2B25;
+            --md-sys-color-surface-container-low: #1B1C18;
             --md-sys-color-on-surface-variant: #C5C8BA;
             --md-sys-color-outline: #8F9285;
             --md-sys-color-outline-variant: #44483D;
 
-            --md-sys-color-surface-container-low: #1B1C18;
-            --md-sys-color-surface-container: #1F201C;
-            --md-sys-color-surface-container-high: #2A2B25;
-            
-            /* In dark mode, elevation is usually represented by lighter surface tones, 
-               but we can keep subtle shadows or remove them */
             --md-elevation-1: 0px 1px 2px 0px rgba(0,0,0,0.3); 
             --md-elevation-2: 0px 2px 6px 2px rgba(0,0,0,0.3);
-            --md-elevation-3: 0px 4px 8px 3px rgba(0,0,0,0.3);
         }
 
         /* Base Settings */
@@ -95,7 +77,6 @@
             color: var(--md-sys-color-on-surface);
             transition: background-color 0.4s cubic-bezier(0.2, 0.0, 0, 1.0), color 0.4s;
             margin: 0;
-            padding: 0;
             overflow-x: hidden;
         }
 
@@ -103,40 +84,53 @@
             font-family: 'Caveat', cursive;
         }
 
-        /* MD3 Easing */
-        .ease-emphasized { transition-timing-function: cubic-bezier(0.2, 0.0, 0, 1.0); }
+        /* === COMPONENT STYLES === */
 
-        /* =========================================
-           COMPONENTS
-           ========================================= */
-
-        /* 1. Top App Bar */
-        .md-top-bar {
-            background-color: var(--md-sys-color-surface-container);
-            color: var(--md-sys-color-on-surface);
-            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
-        }
-        .md-top-bar.scrolled {
-            background-color: var(--md-sys-color-surface-container-high);
-            box-shadow: var(--md-elevation-2);
+        /* Theme Toggle Animation */
+        .theme-icon {
+            position: absolute;
+            transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+            top: 50%;
+            left: 50%;
+            transform-origin: center;
+            margin-top: -12px; /* Half of icon size (24px) */
+            margin-left: -12px;
         }
 
-        /* 2. Buttons */
+        /* Light Mode State: Sun visible, Moon hidden */
+        html.light .icon-sun {
+            opacity: 0;
+            transform: rotate(-90deg) scale(0.5);
+        }
+        html.light .icon-moon {
+            opacity: 1;
+            transform: rotate(0) scale(1);
+        }
+
+        /* Dark Mode State: Sun visible, Moon hidden */
+        html.dark .icon-sun {
+            opacity: 1;
+            transform: rotate(0) scale(1);
+        }
+        html.dark .icon-moon {
+            opacity: 0;
+            transform: rotate(90deg) scale(0.5);
+        }
+
+
+        /* Buttons */
         .md-btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 9999px; /* Pill shape */
+            border-radius: 9999px;
             padding: 0 24px;
             height: 40px;
-            font-family: 'Roboto', sans-serif;
             font-weight: 500;
             font-size: 14px;
             letter-spacing: 0.1px;
             transition: all 0.2s cubic-bezier(0.2, 0.0, 0, 1.0);
             cursor: pointer;
-            overflow: hidden;
-            position: relative;
         }
         .md-btn:active { transform: scale(0.98); }
 
@@ -147,7 +141,7 @@
         }
         .md-btn-filled:hover {
             box-shadow: var(--md-elevation-2);
-            filter: brightness(1.08); /* State layer sim */
+            filter: brightness(1.08);
         }
 
         .md-btn-tonal {
@@ -175,17 +169,16 @@
             font-weight: 700;
         }
 
-        /* 3. Cards */
+        /* Cards */
         .md-card {
             background-color: var(--md-sys-color-surface-container-low);
-            border-radius: 24px; /* MD3 standard */
+            border-radius: 24px;
             overflow: hidden;
-            transition: transform 0.3s cubic-bezier(0.2, 0.0, 0, 1.0), box-shadow 0.3s;
+            transition: transform 0.3s, box-shadow 0.3s;
             border: 1px solid transparent;
         }
         .md-card-elevated {
             box-shadow: var(--md-elevation-1);
-            background-color: var(--md-sys-color-surface-container-low);
         }
         html.dark .md-card-elevated {
              background-color: var(--md-sys-color-surface-container);
@@ -198,25 +191,23 @@
         }
         html.dark .md-card:hover { box-shadow: 0 0 0 1px var(--md-sys-color-outline); }
 
-        /* 4. Text Fields (Outlined) */
+        /* Inputs */
         .md-input-group { position: relative; margin-bottom: 1rem; }
-        
         .md-input {
             width: 100%;
             background: transparent;
             color: var(--md-sys-color-on-surface);
             border: 1px solid var(--md-sys-color-outline);
-            border-radius: 4px; /* Small curve for input, MD3 sometimes uses larger but 4px is standard outlined */
-            padding: 16px 16px;
+            border-radius: 8px;
+            padding: 16px;
             font-size: 16px;
             outline: none;
             transition: border-color 0.2s;
-            border-radius: 8px;
         }
         .md-input:focus {
             border-color: var(--md-sys-color-primary);
             border-width: 2px;
-            padding: 15px 15px; /* Adjust for border width */
+            padding: 15px;
         }
         .md-label {
             position: absolute;
@@ -225,46 +216,26 @@
             color: var(--md-sys-color-on-surface-variant);
             font-size: 16px;
             pointer-events: none;
-            background-color: var(--md-sys-color-surface-container-low); 
-            /* Background needs to match container to hide border behind label */
+            background-color: var(--md-sys-color-surface-container-low);
             padding: 0 4px;
             transition: all 0.2s ease-out;
         }
-        
-        /* Floating label logic */
-        .md-input:focus ~ .md-label,
-        .md-input:not(:placeholder-shown) ~ .md-label {
-            top: -10px;
-            font-size: 12px;
-            color: var(--md-sys-color-primary);
-            font-weight: 500;
+        .md-input:focus ~ .md-label, .md-input:not(:placeholder-shown) ~ .md-label {
+            top: -10px; font-size: 12px; color: var(--md-sys-color-primary); font-weight: 500;
         }
-        
-        /* Fix background for inputs in dark mode/sections */
         section.bg-surface-variant .md-label { background-color: var(--md-sys-color-surface-container); }
-        
-        /* 5. Navigation Drawer (Mobile) */
-        #mobile-menu {
+
+        /* Navigation */
+        .md-top-bar {
             background-color: var(--md-sys-color-surface-container);
-            border-radius: 0 28px 28px 0;
+            color: var(--md-sys-color-on-surface);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .md-top-bar.scrolled {
+            background-color: var(--md-sys-color-surface-container-high);
             box-shadow: var(--md-elevation-2);
         }
 
-        /* 6. Carousel Dots */
-        .dot {
-            background-color: var(--md-sys-color-surface-variant);
-            width: 12px; height: 12px;
-            border-radius: 50%;
-            transition: all 0.3s;
-        }
-        .dot.active {
-            background-color: var(--md-sys-color-primary);
-            transform: scale(1.2);
-            width: 24px; /* oblong active state */
-            border-radius: 6px;
-        }
-
-        /* 7. Icon Button */
         .md-icon-btn {
             width: 48px; height: 48px;
             border-radius: 50%;
@@ -274,17 +245,13 @@
             border: none;
             background: transparent;
             cursor: pointer;
+            position: relative; /* Needed for theme toggle absolute icons */
+            overflow: hidden;
         }
-        .md-icon-btn:hover {
-            background-color: rgba(var(--md-sys-color-on-surface), 0.08);
-            color: var(--md-sys-color-on-surface);
-        }
-        
-        /* Section transitions */
-        .page-section {
-            display: none;
-            animation: fadeScale 0.4s cubic-bezier(0.2, 0.0, 0, 1.0);
-        }
+        .md-icon-btn:hover { background-color: rgba(var(--md-sys-color-on-surface), 0.08); }
+
+        /* Page Transitions */
+        .page-section { display: none; animation: fadeScale 0.4s cubic-bezier(0.2, 0.0, 0, 1.0); }
         .page-section.active { display: block; }
         @keyframes fadeScale {
             from { opacity: 0; transform: scale(0.98) translateY(10px); }
@@ -296,19 +263,19 @@
         [data-animate="fade-up"] { transform: translateY(30px); }
         [data-animate="zoom-in"] { transform: scale(0.92); }
 
+        /* Slider */
+        .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--md-sys-color-surface-variant); transition: 0.3s; }
+        .dot.active { width: 24px; border-radius: 6px; background: var(--md-sys-color-primary); }
+
         /* Preloader */
-        #preloader {
-            background-color: var(--md-sys-color-surface);
-        }
-        #preloader svg path {
-            stroke: var(--md-sys-color-primary);
-        }
+        #preloader { background-color: var(--md-sys-color-surface); }
+        .sage-path { stroke-dasharray: 1500; stroke-dashoffset: 1500; animation: draw 3s forwards; stroke: var(--md-sys-color-primary); }
+        @keyframes draw { to { stroke-dashoffset: 0; } }
 
         /* Utilities */
-        .text-on-surface { color: var(--md-sys-color-on-surface); }
-        .text-on-surface-variant { color: var(--md-sys-color-on-surface-variant); }
         .text-primary { color: var(--md-sys-color-primary); }
-        .bg-surface { background-color: var(--md-sys-color-surface); }
+        .text-on-surface-variant { color: var(--md-sys-color-on-surface-variant); }
+        .text-on-surface { color: var(--md-sys-color-on-surface); }
         .bg-surface-variant { background-color: var(--md-sys-color-surface-container); }
     </style>
 </head>
@@ -316,14 +283,7 @@
 
     <!-- =========== PRELOADER =========== -->
     <div id="preloader" class="fixed inset-0 z-[100] flex justify-center items-center transition-opacity duration-700 ease-out">
-        <svg id="preloader-logo" class="w-32 h-32" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <style>
-                .sage-path {
-                    stroke-dasharray: 1500; stroke-dashoffset: 1500;
-                    animation: draw 3s cubic-bezier(0.2, 0, 0, 1) forwards;
-                }
-                @keyframes draw { to { stroke-dashoffset: 0; } }
-            </style>
+        <svg id="preloader-logo" class="w-32 h-32" viewBox="0 0 200 200">
             <path class="sage-path" d="M100 180 V 50 M100 130 C75 125 75 155 100 150 M100 130 C125 125 125 155 100 150 M100 100 C80 95 80 120 100 115 M100 100 C120 95 120 120 100 115 M100 75 C90 70 90 90 100 85 M100 75 C110 70 110 90 100 85 M80 160 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 M120,165 a4,4 0 1,0 -8,0 a4,4 0 1,0 8,0 M75 90 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
     </div>
@@ -337,7 +297,8 @@
                 <button id="mobile-menu-btn" class="md-icon-btn md:hidden">
                     <span class="material-symbols-rounded">menu</span>
                 </button>
-                <a href="#" class="flex items-center gap-3 group" onclick="showPage('home')">
+                <!-- Используем navigateTo для логотипа -->
+                <a href="/home" class="flex items-center gap-3 group prevent-default" onclick="navigateTo('home', event)">
                     <div class="h-10 w-10 rounded-full overflow-hidden shadow-sm border border-[var(--md-sys-color-outline-variant)]">
                         <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/2499.jpg" alt="Логотип" class="h-full w-full object-cover">
                     </div>
@@ -347,27 +308,28 @@
             
             <!-- Desktop Nav -->
             <nav class="hidden md:flex items-center space-x-1">
-                <button class="md-btn md-btn-text nav-link" onclick="showPage('home')">Главная</button>
-                <button class="md-btn md-btn-text nav-link" onclick="showPage('rentals')">Аренда</button>
-                <button class="md-btn md-btn-text nav-link" onclick="showPage('workshops')">Мастер-классы</button>
-                <button class="md-btn md-btn-text nav-link" onclick="showPage('handmade')">Изделия</button>
-                <button class="md-btn md-btn-text nav-link" onclick="showPage('about')">О нас</button>
-                <button class="md-btn md-btn-text nav-link" onclick="showPage('contacts')">Контакты</button>
+                <button class="md-btn md-btn-text nav-link" onclick="navigateTo('home')">Главная</button>
+                <button class="md-btn md-btn-text nav-link" onclick="navigateTo('rentals')">Аренда</button>
+                <button class="md-btn md-btn-text nav-link" onclick="navigateTo('workshops')">Мастер-классы</button>
+                <button class="md-btn md-btn-text nav-link" onclick="navigateTo('handmade')">Изделия</button>
+                <button class="md-btn md-btn-text nav-link" onclick="navigateTo('about')">О нас</button>
+                <button class="md-btn md-btn-text nav-link" onclick="navigateTo('contacts')">Контакты</button>
             </nav>
 
             <!-- Actions (Theme Toggle) -->
             <div class="flex items-center">
                 <button id="theme-toggle" class="md-icon-btn" aria-label="Переключить тему">
-                    <span class="material-symbols-rounded dark:hidden">dark_mode</span>
-                    <span class="material-symbols-rounded hidden dark:block">light_mode</span>
+                    <!-- Иконки для анимации -->
+                    <span class="material-symbols-rounded theme-icon icon-sun">light_mode</span>
+                    <span class="material-symbols-rounded theme-icon icon-moon">dark_mode</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- =========== MOBILE DRAWER (MENU) =========== -->
+    <!-- =========== MOBILE DRAWER =========== -->
     <div id="mobile-drawer-overlay" class="fixed inset-0 bg-black/50 z-[60] hidden opacity-0 transition-opacity duration-300 backdrop-blur-sm"></div>
-    <aside id="mobile-menu" class="fixed top-0 left-0 bottom-0 w-[300px] z-[70] transform -translate-x-full transition-transform duration-300 flex flex-col py-6 px-4">
+    <aside id="mobile-menu" class="fixed top-0 left-0 bottom-0 w-[300px] z-[70] transform -translate-x-full transition-transform duration-300 flex flex-col py-6 px-4 bg-[var(--md-sys-color-surface-container)]">
         <div class="flex items-center justify-between mb-8 px-2">
             <span class="text-3xl brand-font font-bold text-primary">Меню</span>
             <button id="close-menu-btn" class="md-icon-btn">
@@ -375,12 +337,12 @@
             </button>
         </div>
         <nav class="flex flex-col gap-2">
-            <button class="md-btn md-btn-text w-full justify-start text-lg h-12 rounded-full" onclick="showPage('home')"><span class="material-symbols-rounded mr-4">home</span>Главная</button>
-            <button class="md-btn md-btn-text w-full justify-start text-lg h-12 rounded-full" onclick="showPage('rentals')"><span class="material-symbols-rounded mr-4">checkroom</span>Аренда</button>
-            <button class="md-btn md-btn-text w-full justify-start text-lg h-12 rounded-full" onclick="showPage('workshops')"><span class="material-symbols-rounded mr-4">brush</span>Мастер-классы</button>
-            <button class="md-btn md-btn-text w-full justify-start text-lg h-12 rounded-full" onclick="showPage('handmade')"><span class="material-symbols-rounded mr-4">local_mall</span>Изделия</button>
-            <button class="md-btn md-btn-text w-full justify-start text-lg h-12 rounded-full" onclick="showPage('about')"><span class="material-symbols-rounded mr-4">psychology</span>О нас</button>
-            <button class="md-btn md-btn-text w-full justify-start text-lg h-12 rounded-full" onclick="showPage('contacts')"><span class="material-symbols-rounded mr-4">mail</span>Контакты</button>
+            <button class="md-btn md-btn-text w-full justify-start text-lg h-12 rounded-full" onclick="navigateTo('home')"><span class="material-symbols-rounded mr-4">home</span>Главная</button>
+            <button class="md-btn md-btn-text w-full justify-start text-lg h-12 rounded-full" onclick="navigateTo('rentals')"><span class="material-symbols-rounded mr-4">checkroom</span>Аренда</button>
+            <button class="md-btn md-btn-text w-full justify-start text-lg h-12 rounded-full" onclick="navigateTo('workshops')"><span class="material-symbols-rounded mr-4">brush</span>Мастер-классы</button>
+            <button class="md-btn md-btn-text w-full justify-start text-lg h-12 rounded-full" onclick="navigateTo('handmade')"><span class="material-symbols-rounded mr-4">local_mall</span>Изделия</button>
+            <button class="md-btn md-btn-text w-full justify-start text-lg h-12 rounded-full" onclick="navigateTo('about')"><span class="material-symbols-rounded mr-4">psychology</span>О нас</button>
+            <button class="md-btn md-btn-text w-full justify-start text-lg h-12 rounded-full" onclick="navigateTo('contacts')"><span class="material-symbols-rounded mr-4">mail</span>Контакты</button>
         </nav>
     </aside>
 
@@ -399,78 +361,59 @@
                     Пространство для души, где мы создаем уникальные костюмы, проводим душевные мастер-классы и творим красоту.
                 </p>
                 <div data-animate="fade-up" data-delay="300" class="mt-8 flex gap-4">
-                    <button class="md-btn md-btn-filled" onclick="showPage('rentals')">Смотреть костюмы</button>
-                    <button class="md-btn md-btn-tonal" onclick="showPage('workshops')">Записаться на МК</button>
+                    <button class="md-btn md-btn-filled" onclick="navigateTo('rentals')">Смотреть костюмы</button>
+                    <button class="md-btn md-btn-tonal" onclick="navigateTo('workshops')">Записаться на МК</button>
                 </div>
             </div>
 
-            <!-- Hero Categories -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                <!-- Card 1 -->
-                <div data-animate="zoom-in" class="group relative h-80 md:h-96 rounded-[32px] overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-shadow duration-300" onclick="showPage('rentals')">
+                <div data-animate="zoom-in" class="group relative h-80 md:h-96 rounded-[32px] overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-shadow duration-300" onclick="navigateTo('rentals')">
                     <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/kostum%20krasny%20plasch%20eshe%20photo.jpg" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Аренда">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-8">
                         <h3 class="text-white text-4xl brand-font">Аренда костюмов</h3>
-                        <p class="text-white/90 mt-2 text-sm opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-4 group-hover:translate-y-0 duration-300">Создайте незабываемый образ</p>
                     </div>
                 </div>
-                <!-- Card 2 -->
-                <div data-animate="zoom-in" data-delay="100" class="group relative h-80 md:h-96 rounded-[32px] overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-shadow duration-300" onclick="showPage('workshops')">
+                <div data-animate="zoom-in" data-delay="100" class="group relative h-80 md:h-96 rounded-[32px] overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-shadow duration-300" onclick="navigateTo('workshops')">
                     <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="МК">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-8">
                         <h3 class="text-white text-4xl brand-font">Мастер-классы</h3>
-                        <p class="text-white/90 mt-2 text-sm opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-4 group-hover:translate-y-0 duration-300">Творите своими руками</p>
                     </div>
                 </div>
-                <!-- Card 3 -->
-                <div data-animate="zoom-in" data-delay="200" class="group relative h-80 md:h-96 rounded-[32px] overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-shadow duration-300" onclick="showPage('handmade')">
+                <div data-animate="zoom-in" data-delay="200" class="group relative h-80 md:h-96 rounded-[32px] overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-shadow duration-300" onclick="navigateTo('handmade')">
                     <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/kluchnitsa%20dlya%20kluchey%20vvide%20domikov.jpg" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Изделия">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-8">
                         <h3 class="text-white text-4xl brand-font">Изделия</h3>
-                        <p class="text-white/90 mt-2 text-sm opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-4 group-hover:translate-y-0 duration-300">Уют для вашего дома</p>
                     </div>
                 </div>
             </div>
-            
         </section>
 
         <!-- ===== RENTALS ===== -->
         <section id="rentals" class="page-section">
             <div class="text-center mb-12 max-w-4xl mx-auto">
-                <span class="text-[var(--md-sys-color-primary)] font-bold tracking-wider uppercase text-sm">Коллекция</span>
+                <span class="text-primary font-bold tracking-wider uppercase text-sm">Коллекция</span>
                 <h2 data-animate="fade-up" class="text-5xl md:text-6xl brand-font text-on-surface mt-2 mb-4">Волшебные образы</h2>
                 <p data-animate="fade-up" data-delay="100" class="text-lg text-on-surface-variant">Выберите образ для вашей фотосессии, праздника или фестиваля.</p>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Rental Card Template -->
+                <!-- Card 1 -->
                 <div data-animate="zoom-in" class="md-card md-card-elevated flex flex-col">
                     <div class="relative h-80 w-full bg-gray-200 card-slider-container" data-slider-id="costume-gold">
-                        <!-- Slides -->
                         <div class="slide active absolute inset-0 transition-opacity duration-500 opacity-100 z-10"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/blackgold-demonstraciyanakidkiteploy.jpg" class="w-full h-full object-cover"></div>
                         <div class="slide absolute inset-0 transition-opacity duration-500 opacity-0 z-0"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/blackgold-smitritvzerkalodemonstriuyakorony.jpg" class="w-full h-full object-cover"></div>
                         <div class="slide absolute inset-0 transition-opacity duration-500 opacity-0 z-0"><img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/blackgold-vplonyrost.jpg" class="w-full h-full object-cover"></div>
-                        
-                        <!-- Controls -->
-                        <button class="slider-prev absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/30 text-white backdrop-blur-sm flex items-center justify-center hover:bg-black/50 transition"><span class="material-symbols-rounded">chevron_left</span></button>
-                        <button class="slider-next absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/30 text-white backdrop-blur-sm flex items-center justify-center hover:bg-black/50 transition"><span class="material-symbols-rounded">chevron_right</span></button>
-                        
-                        <!-- Dots -->
-                        <div class="absolute bottom-4 left-0 right-0 z-20 flex justify-center gap-2 dots-container">
-                            <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
-                        </div>
+                        <button class="slider-prev absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/30 text-white backdrop-blur-sm flex items-center justify-center hover:bg-black/50"><span class="material-symbols-rounded">chevron_left</span></button>
+                        <button class="slider-next absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/30 text-white backdrop-blur-sm flex items-center justify-center hover:bg-black/50"><span class="material-symbols-rounded">chevron_right</span></button>
+                        <div class="absolute bottom-4 left-0 right-0 z-20 flex justify-center gap-2 dots-container"><div class="dot active"></div><div class="dot"></div><div class="dot"></div></div>
                     </div>
                     <div class="p-6 flex flex-col flex-grow">
                         <h4 class="text-2xl brand-font font-bold text-on-surface">Темное золото</h4>
                         <p class="text-on-surface-variant mt-2 text-sm leading-relaxed flex-grow">Элегантный черный костюм с позолоченной отделкой. Загадочный и величественный образ.</p>
                         <div class="mt-6 pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
-                            <div class="flex justify-between items-center mb-2">
+                            <div class="flex justify-between items-center">
                                 <span class="text-sm font-medium text-on-surface-variant">Сутки</span>
                                 <span class="font-bold text-primary text-lg">800 ₽</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm font-medium text-on-surface-variant">Неделя</span>
-                                <span class="font-bold text-primary text-lg">2500 ₽</span>
                             </div>
                         </div>
                     </div>
@@ -489,7 +432,7 @@
                         <h4 class="text-2xl brand-font font-bold text-on-surface">Красная мантия</h4>
                         <p class="text-on-surface-variant mt-2 text-sm leading-relaxed flex-grow">Яркий и запоминающийся образ. Отлично смотрится на фотографиях и подходит для сказок.</p>
                         <div class="mt-6 pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
-                            <div class="flex justify-between items-center mb-2">
+                            <div class="flex justify-between items-center">
                                 <span class="text-sm font-medium text-on-surface-variant">Сутки</span>
                                 <span class="font-bold text-primary text-lg">800 ₽</span>
                             </div>
@@ -511,7 +454,7 @@
                         <h4 class="text-2xl brand-font font-bold text-on-surface">Лесная ведунья</h4>
                         <p class="text-on-surface-variant mt-2 text-sm leading-relaxed flex-grow">Таинственный и аутентичный наряд. Многослойная одежда и аксессуары.</p>
                         <div class="mt-6 pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
-                            <div class="flex justify-between items-center mb-2">
+                            <div class="flex justify-between items-center">
                                 <span class="text-sm font-medium text-on-surface-variant">Сутки</span>
                                 <span class="font-bold text-primary text-lg">800 ₽</span>
                             </div>
@@ -520,7 +463,7 @@
                 </div>
             </div>
 
-            <!-- Rental Form Section -->
+            <!-- Form -->
             <div class="mt-16 grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-16 items-start">
                 <div class="bg-surface-variant p-8 rounded-[32px]">
                      <h3 class="text-3xl brand-font text-primary mb-6">Условия аренды</h3>
@@ -539,16 +482,8 @@
                                 <span class="text-on-surface-variant text-sm">По предварительной записи.</span>
                             </div>
                         </li>
-                         <li class="flex items-start gap-4">
-                            <span class="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-on-primary-container flex items-center justify-center flex-shrink-0"><span class="material-symbols-rounded text-lg">clean_hands</span></span>
-                            <div>
-                                <strong class="block text-on-surface">Чистота</strong>
-                                <span class="text-on-surface-variant text-sm">Костюм должен быть возвращен в исходном виде.</span>
-                            </div>
-                        </li>
                      </ul>
                 </div>
-                
                 <div>
                     <h3 class="text-3xl brand-font text-on-surface mb-6">Забронировать</h3>
                     <form id="rental-form" class="space-y-4">
@@ -585,7 +520,6 @@
             </div>
             
             <div class="space-y-8">
-                <!-- Workshop 1 -->
                 <div data-animate="fade-up" class="md-card md-card-elevated flex flex-col md:flex-row overflow-hidden">
                     <div class="w-full md:w-2/5 h-64 md:h-auto">
                         <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" class="w-full h-full object-cover">
@@ -600,7 +534,6 @@
                     </div>
                 </div>
 
-                <!-- Workshop 2 -->
                 <div data-animate="fade-up" class="md-card md-card-elevated flex flex-col md:flex-row-reverse overflow-hidden">
                     <div class="w-full md:w-2/5 h-64 md:h-auto">
                         <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/korobka%20elochnie%20igrushky.jpg" class="w-full h-full object-cover">
@@ -678,7 +611,7 @@
             </div>
             
             <div class="mt-12 flex justify-center">
-                 <button class="md-btn md-btn-tonal h-12 px-8" onclick="showPage('contacts')">
+                 <button class="md-btn md-btn-tonal h-12 px-8" onclick="navigateTo('contacts')">
                     <span class="material-symbols-rounded mr-2">shopping_bag</span>
                     Сделать индивидуальный заказ
                 </button>
@@ -712,7 +645,6 @@
             </div>
             
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                <!-- Info -->
                 <div data-animate="fade-right" class="bg-surface-variant p-8 md:p-10 rounded-[32px] space-y-8">
                     <div>
                         <h4 class="text-2xl brand-font text-on-surface mb-4">Контакты</h4>
@@ -731,7 +663,6 @@
                             </a>
                         </div>
                     </div>
-                    
                     <div>
                         <h4 class="text-2xl brand-font text-on-surface mb-4">Адрес</h4>
                          <div class="flex items-start gap-4 text-on-surface">
@@ -743,7 +674,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div>
                         <h4 class="text-2xl brand-font text-on-surface mb-4">Соцсети</h4>
                         <div class="flex gap-4">
@@ -753,26 +683,21 @@
                     </div>
                 </div>
 
-                <!-- Form -->
                 <div data-animate="fade-left">
                     <form id="contact-form" class="bg-[var(--md-sys-color-surface-container-low)] p-8 md:p-10 rounded-[32px] border border-[var(--md-sys-color-outline-variant)] space-y-5 shadow-sm">
                         <h4 class="text-2xl brand-font text-on-surface mb-2">Напишите нам</h4>
-                        
                         <div class="md-input-group">
                             <input name="name" type="text" id="c-name" placeholder=" " class="md-input peer" required>
                             <label for="c-name" class="md-label">Ваше имя</label>
                         </div>
-                        
                         <div class="md-input-group">
                             <input name="email" type="text" id="c-email" placeholder=" " class="md-input peer" required>
                             <label for="c-email" class="md-label">Email или телефон</label>
                         </div>
-                        
                         <div class="md-input-group">
                             <textarea name="message" id="c-message" rows="4" placeholder=" " class="md-input peer" required></textarea>
                             <label for="c-message" class="md-label">Сообщение</label>
                         </div>
-                        
                         <button type="submit" class="md-btn md-btn-filled w-full h-12 text-lg">
                             <span class="material-symbols-rounded mr-2">send</span>
                             Отправить
@@ -797,7 +722,7 @@
         </div>
     </footer>
 
-    <!-- =========== NOTIFICATION (SNACKBAR STYLE) =========== -->
+    <!-- =========== NOTIFICATION =========== -->
     <div id="notification-modal" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none">
         <div class="bg-[var(--md-sys-color-on-surface)] text-[var(--md-sys-color-surface)] px-6 py-3 rounded-lg shadow-lg flex items-center gap-4 min-w-[300px]">
             <span id="notification-message" class="text-sm flex-grow">Сообщение отправлено</span>
@@ -808,7 +733,19 @@
     <!-- =========== SCRIPTS =========== -->
     <script>
         const TELEGRAM_USERNAME = 'Taniko_67';
-        
+
+        // --- ROUTING CONFIGURATION ---
+        // Карта соответствия: URL путь -> ID секции
+        const ROUTE_MAP = {
+            '/': 'home',
+            '/home': 'home',
+            '/rentals': 'rentals',
+            '/master-classes': 'workshops', // Запрошенный URL
+            '/handmade': 'handmade',
+            '/about': 'about',
+            '/contacts': 'contacts'
+        };
+
         // --- THEME SWITCHER LOGIC ---
         const themeToggleBtn = document.getElementById('theme-toggle');
         const htmlElement = document.documentElement;
@@ -835,18 +772,45 @@
             }
         });
 
-        // --- NAVIGATION LOGIC ---
+        // --- NAVIGATION & ROUTING LOGIC ---
         const pages = document.querySelectorAll('.page-section');
         const navLinks = document.querySelectorAll('.nav-link');
         const mobileMenu = document.getElementById('mobile-menu');
         const mobileDrawerOverlay = document.getElementById('mobile-drawer-overlay');
         const topBar = document.getElementById('top-bar');
 
-        function showPage(pageId) {
+        // Helper to get ID from URL
+        function getSectionIdFromUrl() {
+            const path = window.location.pathname;
+            // Проверяем точное совпадение
+            if (ROUTE_MAP[path]) return ROUTE_MAP[path];
+            // Если слэш в конце
+            const cleanPath = path.endsWith('/') ? path.slice(0, -1) : path;
+             if (ROUTE_MAP[cleanPath]) return ROUTE_MAP[cleanPath];
+            // Дефолт
+            return 'home';
+        }
+
+        // Helper to get URL from ID
+        function getUrlFromSectionId(id) {
+            return Object.keys(ROUTE_MAP).find(key => ROUTE_MAP[key] === id) || '/home';
+        }
+
+        // Main Navigation Function
+        function navigateTo(pageId, event) {
+            if(event) event.preventDefault();
+            
+            // Update URL without reload
+            const url = getUrlFromSectionId(pageId);
+            history.pushState({ pageId: pageId }, '', url);
+            
+            renderPage(pageId);
+        }
+
+        // Render the View
+        function renderPage(pageId) {
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
-
-            // Hide menu if open
             closeMobileMenu();
 
             // Switch content
@@ -859,9 +823,9 @@
                 }
             });
 
-            // Update Active State on Nav (Desktop)
+            // Update Active State on Nav
             navLinks.forEach(btn => {
-                if(btn.getAttribute('onclick').includes(pageId)) {
+                if(btn.getAttribute('onclick').includes(`'${pageId}'`)) {
                     btn.classList.add('active');
                 } else {
                     btn.classList.remove('active');
@@ -869,11 +833,16 @@
             });
         }
 
+        // Handle Browser Back/Forward Buttons
+        window.addEventListener('popstate', (event) => {
+            const pageId = event.state ? event.state.pageId : getSectionIdFromUrl();
+            renderPage(pageId);
+        });
+
         // --- MOBILE MENU ---
         document.getElementById('mobile-menu-btn').addEventListener('click', () => {
             mobileMenu.classList.remove('-translate-x-full');
             mobileDrawerOverlay.classList.remove('hidden');
-            // Small delay for fade in
             setTimeout(() => mobileDrawerOverlay.classList.remove('opacity-0'), 10);
         });
 
@@ -886,26 +855,36 @@
         document.getElementById('close-menu-btn').addEventListener('click', closeMobileMenu);
         mobileDrawerOverlay.addEventListener('click', closeMobileMenu);
 
-        // --- SCROLL EFFECT TOP BAR ---
+        // --- SCROLL EFFECT ---
         window.addEventListener('scroll', () => {
-            if (window.scrollY > 20) {
-                topBar.classList.add('scrolled');
-            } else {
-                topBar.classList.remove('scrolled');
-            }
+            if (window.scrollY > 20) topBar.classList.add('scrolled');
+            else topBar.classList.remove('scrolled');
         });
 
         // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
             const preloader = document.getElementById('preloader');
-            
-            // Artificial delay to show logo animation
             setTimeout(() => {
                 preloader.classList.add('opacity-0', 'pointer-events-none');
             }, 2500);
 
-            showPage('home');
+            // Initial Route Check
+            const initialId = getSectionIdFromUrl();
+            renderPage(initialId);
+            
+            // Replace History State to handle refresh cleanly
+            const initialUrl = getUrlFromSectionId(initialId);
+            history.replaceState({ pageId: initialId }, '', initialUrl);
+
             initializeCardSliders();
+            
+            // Prevent default link clicks for internal navigation
+            document.querySelectorAll('a.prevent-default').forEach(link => {
+                link.addEventListener('click', function(e) {
+                   // Logic handled in inline onclick, just prevent standard href
+                   e.preventDefault(); 
+                });
+            });
         });
 
         // --- NOTIFICATIONS ---
@@ -913,7 +892,6 @@
             const modal = document.getElementById('notification-modal');
             document.getElementById('notification-message').textContent = message;
             modal.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
-            
             setTimeout(() => closeNotification(), 4000);
         }
 
@@ -925,13 +903,10 @@
         // --- TELEGRAM ---
         function redirectToTelegram(text) {
             const encodedText = encodeURIComponent(text);
-            const url = `https://t.me/${TELEGRAM_USERNAME}?text=${encodedText}`;
-            window.open(url, '_blank');
+            window.open(`https://t.me/${TELEGRAM_USERNAME}?text=${encodedText}`, '_blank');
         }
 
-        function signUpViaTelegram(msg) {
-            redirectToTelegram(msg);
-        }
+        function signUpViaTelegram(msg) { redirectToTelegram(msg); }
 
         // --- FORMS ---
         document.getElementById('rental-form').addEventListener('submit', (e) => {
@@ -952,38 +927,29 @@
             showNotification('Переходим в Telegram...');
         });
 
-        // --- ANIMATIONS ON SCROLL ---
+        // --- ANIMATIONS ---
         const observer = new IntersectionObserver((entries, observerInstance) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const el = entry.target;
-                    const delay = el.dataset.delay || 0;
-                    setTimeout(() => {
-                        el.classList.add('is-visible');
-                    }, delay);
+                    setTimeout(() => el.classList.add('is-visible'), el.dataset.delay || 0);
                     observerInstance.unobserve(el);
                 }
             });
         }, { threshold: 0.1 });
 
         function runAnimations(container) {
-            const animatedElements = container.querySelectorAll('[data-animate]');
-            animatedElements.forEach(el => {
+            container.querySelectorAll('[data-animate]').forEach(el => {
                 el.classList.remove('is-visible');
                 observer.observe(el);
             });
         }
 
-        // --- SLIDERS (UPDATED VISUALS) ---
+        // --- SLIDERS ---
         function initializeCardSliders() {
-            const sliderContainers = document.querySelectorAll('[data-slider-id]');
-
-            sliderContainers.forEach(container => {
+            document.querySelectorAll('[data-slider-id]').forEach(container => {
                 const slides = container.querySelectorAll('.slide');
-                const prevBtn = container.querySelector('.slider-prev');
-                const nextBtn = container.querySelector('.slider-next');
                 const dotsContainer = container.querySelector('.dots-container');
-                
                 if (!slides.length || !dotsContainer) return;
                 
                 const dots = dotsContainer.querySelectorAll('.dot');
@@ -994,30 +960,22 @@
                     else if (n < 0) currentSlide = slides.length - 1;
                     else currentSlide = n;
 
-                    // Fade effect
                     slides.forEach(slide => {
-                        slide.classList.remove('active');
-                        slide.classList.remove('opacity-100');
+                        slide.classList.remove('active', 'opacity-100');
                         slide.classList.add('opacity-0');
                         slide.style.zIndex = 0;
                     });
-                    
-                    slides[currentSlide].classList.add('active');
+                    slides[currentSlide].classList.add('active', 'opacity-100');
                     slides[currentSlide].classList.remove('opacity-0');
-                    slides[currentSlide].classList.add('opacity-100');
                     slides[currentSlide].style.zIndex = 10;
 
-                    // Dots logic
                     dots.forEach(dot => dot.classList.remove('active'));
                     if (dots[currentSlide]) dots[currentSlide].classList.add('active');
                 }
 
-                prevBtn.addEventListener('click', (e) => { e.stopPropagation(); showSlide(currentSlide - 1); });
-                nextBtn.addEventListener('click', (e) => { e.stopPropagation(); showSlide(currentSlide + 1); });
-                
-                // Allow clicking image to advance
+                container.querySelector('.slider-prev').addEventListener('click', (e) => { e.stopPropagation(); showSlide(currentSlide - 1); });
+                container.querySelector('.slider-next').addEventListener('click', (e) => { e.stopPropagation(); showSlide(currentSlide + 1); });
                 container.addEventListener('click', () => showSlide(currentSlide + 1));
-
                 showSlide(0);
             });
         }
