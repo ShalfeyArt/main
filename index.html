@@ -120,6 +120,7 @@
             letter-spacing: 0.1px;
             transition: all 0.2s cubic-bezier(0.2, 0.0, 0, 1.0);
             cursor: pointer;
+            z-index: 1; /* Чтобы текст был над индикатором навигации */
         }
         .md-btn:active { transform: scale(0.98); }
 
@@ -152,10 +153,25 @@
             background-color: rgba(var(--md-sys-color-on-surface), 0.08);
             color: var(--md-sys-color-on-surface);
         }
+        /* Убираем жесткий фон у активной кнопки, так как теперь есть индикатор */
         .md-btn-text.active {
-            background-color: var(--md-sys-color-secondary-container);
+            background-color: transparent; 
             color: var(--md-sys-color-on-secondary-container);
             font-weight: 700;
+        }
+
+        /* NEW: Sliding Nav Indicator */
+        #nav-indicator {
+            position: absolute;
+            height: 40px; /* Высота кнопки */
+            background-color: var(--md-sys-color-secondary-container);
+            border-radius: 9999px;
+            z-index: 0; /* Под кнопками */
+            top: 50%;
+            transform: translateY(-50%);
+            transition: all 0.4s cubic-bezier(0.2, 0.0, 0, 1.0); /* MD3 Easing */
+            opacity: 0;
+            pointer-events: none;
         }
 
         /* Cards - MD3 Style */
@@ -352,8 +368,11 @@
                 </a>
             </div>
             
-            <!-- Desktop Nav -->
-            <nav class="hidden md:flex items-center space-x-1">
+            <!-- Desktop Nav with Smooth Indicator -->
+            <nav class="hidden md:flex items-center relative" id="desktop-nav">
+                <!-- The sliding indicator -->
+                <div id="nav-indicator"></div>
+                
                 <button class="md-btn md-btn-text nav-link" onclick="navigateTo('home')">Главная</button>
                 <button class="md-btn md-btn-text nav-link" onclick="navigateTo('rentals')">Аренда</button>
                 <button class="md-btn md-btn-text nav-link" onclick="navigateTo('workshops')">Мастер-классы</button>
@@ -578,7 +597,7 @@
             
             <div class="space-y-8">
                 <div data-animate="fade-up" class="md-card md-card-elevated flex flex-col md:flex-row overflow-hidden">
-                    <div class="w-full md:w-2/5 h-64 md:h-auto">
+                    <div class="w-full md:w-2/5 h-64 md:h-[450px]">
                         <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" class="w-full h-full object-cover">
                     </div>
                     <div class="p-8 flex-1 flex flex-col justify-center">
@@ -592,7 +611,7 @@
                 </div>
 
                 <div data-animate="fade-up" class="md-card md-card-elevated flex flex-col md:flex-row-reverse overflow-hidden">
-                    <div class="w-full md:w-2/5 h-64 md:h-auto">
+                    <div class="w-full md:w-2/5 h-64 md:h-[450px]">
                         <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/korobka%20elochnie%20igrushky.jpg" class="w-full h-full object-cover">
                     </div>
                     <div class="p-8 flex-1 flex flex-col justify-center">
@@ -629,7 +648,7 @@
                     <div class="p-5 flex flex-col flex-grow">
                         <h4 class="text-xl brand-font font-bold text-on-surface">Ключница "Домики"</h4>
                         <p class="text-sm text-on-surface-variant mt-2 flex-grow">Очаровательный декор для прихожей.</p>
-                        <span class="mt-4 text-lg font-bold text-primary">1500 ₽</span>
+                        <span class="mt-4 text-lg font-bold text-primary">от 1000₽</span>
                     </div>
                 </div>
                 <!-- Item 2 -->
@@ -640,7 +659,7 @@
                     <div class="p-5 flex flex-col flex-grow">
                         <h4 class="text-xl brand-font font-bold text-on-surface">Шкатулка "Медь"</h4>
                         <p class="text-sm text-on-surface-variant mt-2 flex-grow">Имитация чеканки, ручная роспись.</p>
-                        <span class="mt-4 text-lg font-bold text-primary">от 800 ₽</span>
+                        <span class="mt-4 text-lg font-bold text-primary">от 500 ₽</span>
                     </div>
                 </div>
                 <!-- Item 3 -->
@@ -665,6 +684,67 @@
                         <span class="mt-4 text-lg font-bold text-primary">1100 ₽</span>
                     </div>
                 </div>
+                <!-- Item 5 -->
+                <div data-animate="zoom-in" data-delay="300" class="md-card md-card-elevated flex flex-col">
+                    <div class="h-64 overflow-hidden">
+                        <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/kubishka-travnica.jpg" class="w-full h-full object-cover hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <div class="p-5 flex flex-col flex-grow">
+                        <h4 class="text-xl brand-font font-bold text-on-surface">Кубышка-Травница</h4>
+                        <p class="text-sm text-on-surface-variant mt-2 flex-grow">Душистый оберег ручной работы: тепло природы для вашего дома.</p>
+                        <span class="mt-4 text-lg font-bold text-primary">700 ₽</span>
+                    </div>
+                </div>
+
+                            <!-- Item 6 -->
+                <div data-animate="zoom-in" data-delay="300" class="md-card md-card-elevated flex flex-col">
+                    <div class="h-64 overflow-hidden">
+                        <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/kluchnica-domiki.png" class="w-full h-full object-cover hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <div class="p-5 flex flex-col flex-grow">
+                        <h4 class="text-xl brand-font font-bold text-on-surface">Ключница - домики</h4>
+                        <p class="text-sm text-on-surface-variant mt-2 flex-grow">Очаровательный декор для прихожей. (готовый)</p>
+                        <span class="mt-4 text-lg font-bold text-primary">700 ₽</span>
+                    </div>
+                </div>
+                            <!-- Item 7 -->
+                <div data-animate="zoom-in" data-delay="300" class="md-card md-card-elevated flex flex-col">
+                    <div class="h-64 overflow-hidden">
+                        <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/kukla-blagopolu4nica.jpg" class="w-full h-full object-cover hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <div class="p-5 flex flex-col flex-grow">
+                        <h4 class="text-xl brand-font font-bold text-on-surface">Кукла Благополучница</h4>
+                        <p class="text-sm text-on-surface-variant mt-2 flex-grow">Маленькая хранительница достатка. Тёплый подарок с глубоким смыслом.</p>
+                        <span class="mt-4 text-lg font-bold text-primary">500 ₽</span>
+                    </div>
+
+                </div>
+
+                <!-- Item 8 -->
+                <div data-animate="zoom-in" data-delay="100" class="md-card md-card-elevated flex flex-col">
+                    <div class="h-64 overflow-hidden">
+                        <img src="https://github.com/XtraDamage/Tonimage-/blob/main/bottle-vintage.png?raw=true" class="w-full h-full object-cover hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <div class="p-5 flex flex-col flex-grow">
+                        <h4 class="text-xl brand-font font-bold text-on-surface">Винтажная бутылка</h4>
+                        <p class="text-sm text-on-surface-variant mt-2 flex-grow">Имитация металла, ручная роспись.</p>
+                        <span class="mt-4 text-lg font-bold text-primary">от 500 ₽</span>
+                    </div>
+                </div>
+                </div>
+                <br>
+                <!-- реставрация -->
+                <div data-animate="zoom-in" data-delay="100" class="md-card md-card-elevated flex flex-col">
+                    <div class="p-5 flex flex-col flex-grow">
+                        <h4 class="text-xl brand-font font-bold text-on-surface">реставрация мебели:</h4>
+                        <p class="text-sm text-on-surface-variant mt-2 flex-grow"></p>
+                        <span class="mt-4 text-lg font-bold text-primary">стулья: от 2000 ₽</span>
+                        <span class="mt-4 text-lg font-bold text-primary">табуреты: от 1500 ₽</span>
+                        <span class="mt-4 text-lg font-bold text-primary">тумбочки: от 2000 ₽</span>
+                    </div>
+                </div>
+            </div>
+            </div>
             </div>
             
             <div class="mt-12 flex justify-center">
@@ -846,6 +926,26 @@
         const mobileMenu = document.getElementById('mobile-menu');
         const mobileDrawerOverlay = document.getElementById('mobile-drawer-overlay');
         const topBar = document.getElementById('top-bar');
+        const navIndicator = document.getElementById('nav-indicator');
+
+        // NEW: Function to update the sliding nav indicator
+        function updateNavIndicator(activeLink) {
+            if (activeLink && navIndicator) {
+                // Получаем позицию и размеры активной ссылки
+                const rect = activeLink.getBoundingClientRect();
+                const parentRect = activeLink.parentElement.getBoundingClientRect();
+                
+                // Вычисляем позицию относительно родителя
+                const left = activeLink.offsetLeft;
+                const width = activeLink.offsetWidth;
+                
+                navIndicator.style.width = `${width}px`;
+                navIndicator.style.left = `${left}px`;
+                navIndicator.style.opacity = '1';
+            } else if (navIndicator) {
+                navIndicator.style.opacity = '0';
+            }
+        }
 
         // Main Navigation Function (Triggered by clicks)
         function navigateTo(pageId, event) {
@@ -885,16 +985,30 @@
             });
 
             // Update Active State on Nav
+            let activeLinkBtn = null;
             navLinks.forEach(btn => {
                 // Проверяем, ведет ли кнопка на текущую страницу
                 const onClickAttr = btn.getAttribute('onclick');
                 if(onClickAttr && onClickAttr.includes(`'${pageId}'`)) {
                     btn.classList.add('active');
+                    activeLinkBtn = btn;
                 } else {
                     btn.classList.remove('active');
                 }
             });
+
+            // NEW: Update slider position
+            // Small delay to ensure styles are applied if coming from hidden state
+            setTimeout(() => {
+                 if (activeLinkBtn) updateNavIndicator(activeLinkBtn);
+            }, 50);
         }
+
+        // Update indicator on window resize
+        window.addEventListener('resize', () => {
+             const activeBtn = document.querySelector('.nav-link.active');
+             if(activeBtn) updateNavIndicator(activeBtn);
+        });
 
         // --- MOBILE MENU ---
         document.getElementById('mobile-menu-btn').addEventListener('click', () => {
@@ -1039,7 +1153,7 @@
             });
         }
 
-        // --- SLIDERS ---
+        // --- SLIDERS WITH SWIPE ---
         function initializeCardSliders() {
             document.querySelectorAll('[data-slider-id]').forEach(container => {
                 const slides = container.querySelectorAll('.slide');
@@ -1069,9 +1183,33 @@
 
                 container.querySelector('.slider-prev').addEventListener('click', (e) => { e.stopPropagation(); showSlide(currentSlide - 1); });
                 container.querySelector('.slider-next').addEventListener('click', (e) => { e.stopPropagation(); showSlide(currentSlide + 1); });
-                // Optional: Click on image to advance
-                // container.addEventListener('click', () => showSlide(currentSlide + 1));
+                
                 showSlide(0);
+
+                // --- NEW: SWIPE GESTURES ---
+                let touchStartX = 0;
+                let touchEndX = 0;
+
+                container.addEventListener('touchstart', e => {
+                    touchStartX = e.changedTouches[0].screenX;
+                }, {passive: true});
+
+                container.addEventListener('touchend', e => {
+                    touchEndX = e.changedTouches[0].screenX;
+                    handleSwipe();
+                }, {passive: true});
+
+                function handleSwipe() {
+                    const SWIPE_THRESHOLD = 50; // Minimum distance for a swipe
+                    if (touchEndX < touchStartX - SWIPE_THRESHOLD) {
+                        // Swipe LEFT -> Next Slide
+                        showSlide(currentSlide + 1);
+                    }
+                    if (touchEndX > touchStartX + SWIPE_THRESHOLD) {
+                        // Swipe RIGHT -> Prev Slide
+                        showSlide(currentSlide - 1);
+                    }
+                }
             });
         }
     </script>
