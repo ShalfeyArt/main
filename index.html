@@ -1439,5 +1439,110 @@
             if (e.target === lightbox) closeLightbox();
         });
     </script>
+    <style>
+    * {
+        cursor: none !important;
+    }
+
+    #custom-cursor {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 24px; 
+        height: 24px;
+        pointer-events: none;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transform: rotate(-25deg); 
+        will-change: transform;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .cursor-icon {
+        width: 100%;
+        height: 100%;
+        fill: var(--md-cursor-color);
+        filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.25));
+        transition: fill 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s ease;
+    }
+
+    :root {
+        --md-cursor-color: #6750A4;
+    }
+
+    .dark {
+        --md-cursor-color: #D0BCFF;
+    }
+
+    .cursor-active .cursor-icon {
+        transform: scale(1.15);
+    }
+
+    @media (max-width: 768px) {
+        #custom-cursor { display: none; }
+        * { cursor: auto !important; }
+    }
+</style>
+
+<div id="custom-cursor">
+    <svg class="cursor-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path 
+            d="M12 4L5 19.5C4.8 20.2 5.5 20.8 6.2 20.5L12 18L17.8 20.5C18.5 20.8 19.2 20.2 19 19.5L12 4Z" 
+            stroke-width="2.5" 
+            stroke-linejoin="round" 
+            stroke-linecap="round"
+            style="stroke: var(--md-cursor-color); paint-order: stroke fill;"
+        />
+    </svg>
+</div>
+
+<script>
+    const cursor = document.getElementById('custom-cursor');
+    let currentX = 0;
+    let currentY = 0;
+    let targetX = 0;
+    let targetY = 0;
+    let isInitialized = false;
+
+    function lerp(start, end, amt) {
+        return (1 - amt) * start + amt * end;
+    }
+
+    document.addEventListener('mousemove', (e) => {
+        targetX = e.clientX;
+        targetY = e.clientY;
+        
+        if (!isInitialized) {
+            currentX = targetX;
+            currentY = targetY;
+            cursor.style.opacity = '1';
+            isInitialized = true;
+        }
+    });
+
+    function animate() {
+        currentX = lerp(currentX, targetX, 0.35);
+        currentY = lerp(currentY, targetY, 0.35);
+        cursor.style.transform = `translate3d(${currentX - 4}px, ${currentY - 2}px, 0) rotate(-25deg)`;
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+    const updateCursorState = (e) => {
+        const isInteractable = e.target.closest('a, button, input, [role="button"], .group, select, textarea, .clickable');
+        if (isInteractable) {
+            cursor.classList.add('cursor-active');
+        } else {
+            cursor.classList.remove('cursor-active');
+        }
+    };
+
+    document.addEventListener('mouseover', updateCursorState);
+    document.addEventListener('mouseleave', () => cursor.style.opacity = '0');
+    document.addEventListener('mouseenter', () => cursor.style.opacity = '1');
+</script>
 </body>
 </html>
