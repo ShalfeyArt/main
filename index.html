@@ -53,7 +53,7 @@
             --md-sys-color-primary: #B1D188;
             --md-sys-color-on-primary: #1F3701;
             --md-sys-color-primary-container: #354E16;
-            --md-sys-color-on-primary-container: #CDEDA3; /* Это яркий салатовый цвет для текста на контейнере */
+            --md-sys-color-on-primary-container: #CDEDA3; 
             --md-sys-color-secondary-container: #404A33;
             --md-sys-color-on-secondary-container: #DCE7C8;
             --md-sys-color-tertiary: #A0D0CB;
@@ -623,34 +623,219 @@
                 <p data-animate="fade-up" data-delay="100" class="text-lg text-on-surface-variant mt-2">Создавайте прекрасное своими руками.</p>
             </div>
             
-            <div class="space-y-8">
-                <div data-animate="fade-up" class="md-card md-card-elevated flex flex-col md:flex-row overflow-hidden">
-                    <div class="w-full md:w-2/5 h-64 md:h-[450px]">
-                        <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" class="w-full h-full object-cover">
+            <!-- Grid Layout for 14 Items -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- 1. Шкатулка "Медное сокровище" -->
+                <div data-animate="zoom-in" class="md-card md-card-elevated flex flex-col h-full">
+                    <div class="h-64 overflow-hidden relative">
+                        <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/Shkatulka%20samodel%20kak%20iz%20medi%20s%20masterclassa.jpg" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
                     </div>
-                    <div class="p-8 flex-1 flex flex-col justify-center">
-                        <h3 class="text-3xl brand-font text-on-surface mb-2">Шкатулка "Медное сокровище"</h3>
-                        <p class="text-on-surface-variant mb-6 leading-relaxed">Освойте техники декорирования и состаривания, научитесь создавать имитацию чеканки по меди.</p>
-                        <div class="flex items-center justify-between mt-auto">
-                            <span class="text-2xl font-bold text-primary">1500 ₽</span>
-                            <button class="md-btn md-btn-filled" onclick="signUpViaTelegram('Хочу на МК по шкатулке')">Записаться</button>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-2xl brand-font text-on-surface mb-2">Медное сокровище</h3>
+                        <p class="text-on-surface-variant mb-4 text-sm leading-relaxed flex-grow">Освойте техники декорирования и состаривания, научитесь создавать имитацию чеканки по меди.</p>
+                        <div class="flex items-center justify-between mt-auto pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
+                            <span class="text-xl font-bold text-primary">1500 ₽</span>
+                            <button class="md-btn md-btn-tonal h-8 px-4 text-xs" onclick="signUpViaTelegram('МК Медное сокровище')">Записаться</button>
                         </div>
                     </div>
                 </div>
 
-                <div data-animate="fade-up" class="md-card md-card-elevated flex flex-col md:flex-row-reverse overflow-hidden">
-                    <div class="w-full md:w-2/5 h-64 md:h-[450px]">
-                        <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/main/korobka%20elochnie%20igrushky.jpg" class="w-full h-full object-cover">
+                <!-- 2. Шкатулка "Старинные секреты" -->
+                <div data-animate="zoom-in" data-delay="50" class="md-card md-card-elevated flex flex-col h-full">
+                     <div class="h-64 overflow-hidden relative">
+                        <img src="https://raw.githubusercontent.com/ShalfeyArt/gallery/main/3.jpg" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
                     </div>
-                    <div class="p-8 flex-1 flex flex-col justify-center">
-                        <h3 class="text-3xl brand-font text-on-surface mb-2">Роспись новогодних игрушек</h3>
-                        <p class="text-on-surface-variant mb-6 leading-relaxed">Собственный набор уникальных украшений! Деревянные заготовки, краски, блёстки и декор включены.</p>
-                        <div class="flex items-center justify-between mt-auto">
-                            <span class="text-2xl font-bold text-primary">1000 ₽</span>
-                            <button class="md-btn md-btn-filled" onclick="signUpViaTelegram('Хочу на МК по игрушкам')">Записаться</button>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-2xl brand-font text-on-surface mb-2">Старинные секреты</h3>
+                        <p class="text-on-surface-variant mb-4 text-sm leading-relaxed flex-grow">Создаем шкатулку из МДФ в техниках декупаж и трафаретная роспись. Теплый чай и радость творчества.</p>
+                        <div class="flex items-center justify-between mt-auto pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
+                            <span class="text-xl font-bold text-primary">1900 ₽</span>
+                            <button class="md-btn md-btn-tonal h-8 px-4 text-xs" onclick="signUpViaTelegram('МК Старинные секреты')">Записаться</button>
                         </div>
                     </div>
                 </div>
+
+                <!-- 3. Винтажная бутылка -->
+                <div data-animate="zoom-in" data-delay="100" class="md-card md-card-elevated flex flex-col h-full">
+                    <div class="h-64 overflow-hidden relative">
+                         <img src="https://github.com/XtraDamage/Tonimage-/blob/main/bottle-vintage.png?raw=true" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-2xl brand-font text-on-surface mb-2">Винтажная бутылка</h3>
+                        <p class="text-on-surface-variant mb-4 text-sm leading-relaxed flex-grow">Имитация металла, состаривание и уникальный декор для вашего интерьера.</p>
+                        <div class="flex items-center justify-between mt-auto pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
+                            <span class="text-xl font-bold text-primary">1200 ₽</span>
+                            <button class="md-btn md-btn-tonal h-8 px-4 text-xs" onclick="signUpViaTelegram('МК Винтажная бутылка')">Записаться</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Эко-ночник -->
+                <div data-animate="zoom-in" data-delay="150" class="md-card md-card-elevated flex flex-col h-full">
+                    <div class="h-64 overflow-hidden relative">
+                        <img src="https://github.com/XtraDamage/Tonimage-/blob/main/no4nik.png?raw=true" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-2xl brand-font text-on-surface mb-2">Эко-ночник в банке</h3>
+                        <p class="text-on-surface-variant mb-4 text-sm leading-relaxed flex-grow">Создаем сказочный лес со светящимися грибами, мхом и стеклянными шариками.</p>
+                        <div class="flex items-center justify-between mt-auto pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
+                            <span class="text-xl font-bold text-primary">1200 ₽</span>
+                            <button class="md-btn md-btn-tonal h-8 px-4 text-xs" onclick="signUpViaTelegram('МК Эко-ночник')">Записаться</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Кубышка-травница -->
+                <div data-animate="zoom-in" data-delay="200" class="md-card md-card-elevated flex flex-col h-full">
+                    <div class="h-64 overflow-hidden relative">
+                        <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/kubishka-travnica.jpg" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-2xl brand-font text-on-surface mb-2">Кубышка-травница</h3>
+                        <p class="text-on-surface-variant mb-4 text-sm leading-relaxed flex-grow">Душевный вечер по созданию старинного оберега. Натуральные ткани и душистые травы.</p>
+                        <div class="flex items-center justify-between mt-auto pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
+                            <span class="text-xl font-bold text-primary">1500 ₽</span>
+                            <button class="md-btn md-btn-tonal h-8 px-4 text-xs" onclick="signUpViaTelegram('МК Кубышка-травница')">Записаться</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. Благополучница -->
+                <div data-animate="zoom-in" data-delay="250" class="md-card md-card-elevated flex flex-col h-full">
+                    <div class="h-64 overflow-hidden relative">
+                        <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/kukla-blagopolu4nica.jpg" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-2xl brand-font text-on-surface mb-2">Благополучница</h3>
+                        <p class="text-on-surface-variant mb-4 text-sm leading-relaxed flex-grow">Маленькая кукла-хозяюшка, хранительница достатка и мира в доме.</p>
+                        <div class="flex items-center justify-between mt-auto pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
+                            <span class="text-xl font-bold text-primary">1000 ₽</span>
+                            <button class="md-btn md-btn-tonal h-8 px-4 text-xs" onclick="signUpViaTelegram('МК Благополучница')">Записаться</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. Радостея -->
+                <div data-animate="zoom-in" data-delay="300" class="md-card md-card-elevated flex flex-col h-full">
+                    <div class="h-64 overflow-hidden relative">
+                        <img src="https://github.com/XtraDamage/Tonimage-/blob/main/radosea.jpg?raw=true" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-2xl brand-font text-on-surface mb-2">Кукла Радостея</h3>
+                        <p class="text-on-surface-variant mb-4 text-sm leading-relaxed flex-grow">Обережная кукла, поднимающая руки к небу, призывающая радость и хорошие вести.</p>
+                        <div class="flex items-center justify-between mt-auto pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
+                            <span class="text-xl font-bold text-primary">1000 ₽</span>
+                            <button class="md-btn md-btn-tonal h-8 px-4 text-xs" onclick="signUpViaTelegram('МК Радостея')">Записаться</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 8. Ловец снов -->
+                <div data-animate="zoom-in" data-delay="350" class="md-card md-card-elevated flex flex-col h-full">
+                    <div class="h-64 overflow-hidden relative">
+                        <img src="https://github.com/XtraDamage/Tonimage-/blob/main/lovec.jpg?raw=true" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-2xl brand-font text-on-surface mb-2">Ловец снов</h3>
+                        <p class="text-on-surface-variant mb-4 text-sm leading-relaxed flex-grow">Плетение традиционного индейского амулета, защищающего спящего от злых духов.</p>
+                        <div class="flex items-center justify-between mt-auto pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
+                            <span class="text-xl font-bold text-primary">1500 ₽</span>
+                            <button class="md-btn md-btn-tonal h-8 px-4 text-xs" onclick="signUpViaTelegram('МК Ловец снов')">Записаться</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 9. Сердечное саше -->
+                <div data-animate="zoom-in" data-delay="400" class="md-card md-card-elevated flex flex-col h-full">
+                    <div class="h-64 overflow-hidden relative">
+                        <img src="https://raw.githubusercontent.com/ShalfeyArt/gallery/main/20.jpg" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-2xl brand-font text-on-surface mb-2">Сердечное саше</h3>
+                        <p class="text-on-surface-variant mb-4 text-sm leading-relaxed flex-grow">Текстильные сердечки с натуральными травами, вышивкой и кисточками.</p>
+                        <div class="flex items-center justify-between mt-auto pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
+                            <span class="text-xl font-bold text-primary">1500 ₽</span>
+                            <button class="md-btn md-btn-tonal h-8 px-4 text-xs" onclick="signUpViaTelegram('МК Сердечное саше')">Записаться</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 10. Эко-подвес Равновесие -->
+                <div data-animate="zoom-in" data-delay="450" class="md-card md-card-elevated flex flex-col h-full">
+                    <div class="h-64 overflow-hidden relative">
+                        <img src="https://github.com/XtraDamage/Tonimage-/blob/main/imba.jpeg?raw=true" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-2xl brand-font text-on-surface mb-2">Эко-подвес Равновесие</h3>
+                        <p class="text-on-surface-variant mb-4 text-sm leading-relaxed flex-grow">Оберег с рунами и символичными предметами из природных материалов.</p>
+                        <div class="flex items-center justify-between mt-auto pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
+                            <span class="text-xl font-bold text-primary">1200 ₽</span>
+                            <button class="md-btn md-btn-tonal h-8 px-4 text-xs" onclick="signUpViaTelegram('МК Равновесие')">Записаться</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 11. Семейное гнездышко -->
+                <div data-animate="zoom-in" data-delay="500" class="md-card md-card-elevated flex flex-col h-full">
+                    <div class="h-64 overflow-hidden relative">
+                        <img src="https://github.com/XtraDamage/Tonimage-/blob/main/gn3zdishko.jpg?raw=true" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-2xl brand-font text-on-surface mb-2">Семейное гнездышко</h3>
+                        <p class="text-on-surface-variant mb-4 text-sm leading-relaxed flex-grow">Экологичный оберег на укрепление и цельность семьи и рода.</p>
+                        <div class="flex items-center justify-between mt-auto pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
+                            <span class="text-xl font-bold text-primary">1300 ₽</span>
+                            <button class="md-btn md-btn-tonal h-8 px-4 text-xs" onclick="signUpViaTelegram('МК Семейное гнездышко')">Записаться</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 12. Интерьерный венок -->
+                <div data-animate="zoom-in" data-delay="550" class="md-card md-card-elevated flex flex-col h-full">
+                     <div class="h-64 overflow-hidden relative">
+                         <img src="https://github.com/XtraDamage/Tonimage-/blob/main/venok.png?raw=true" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-2xl brand-font text-on-surface mb-2">Праздничный венок</h3>
+                        <p class="text-on-surface-variant mb-4 text-sm leading-relaxed flex-grow">Создание атмосферного венка из природных материалов для украшения дома.</p>
+                        <div class="flex items-center justify-between mt-auto pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
+                            <span class="text-xl font-bold text-primary">1800 ₽</span>
+                            <button class="md-btn md-btn-tonal h-8 px-4 text-xs" onclick="signUpViaTelegram('МК Венок')">Записаться</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 13. Волшебная шляпа -->
+                <div data-animate="zoom-in" data-delay="600" class="md-card md-card-elevated flex flex-col h-full">
+                     <div class="h-64 overflow-hidden relative">
+                        <img src="https://github.com/XtraDamage/Tonimage-/blob/main/hats.jpg?raw=true" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-2xl brand-font text-on-surface mb-2">Волшебная шляпа</h3>
+                        <p class="text-on-surface-variant mb-4 text-sm leading-relaxed flex-grow">Украшаем шляпы кружевами, травами и перьями. Знакомимся с теневой стороной, работаем с МАК.</p>
+                        <div class="flex items-center justify-between mt-auto pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
+                            <span class="text-xl font-bold text-primary">2000 ₽</span>
+                            <button class="md-btn md-btn-tonal h-8 px-4 text-xs" onclick="signUpViaTelegram('МК Волшебная шляпа')">Записаться</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 14. Ключница Домики -->
+                <div data-animate="zoom-in" data-delay="650" class="md-card md-card-elevated flex flex-col h-full">
+                     <div class="h-64 overflow-hidden relative">
+                        <img src="https://raw.githubusercontent.com/XtraDamage/Tonimage-/refs/heads/main/kluchnica-domiki.png" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-2xl brand-font text-on-surface mb-2">Ключница "Домики"</h3>
+                        <p class="text-on-surface-variant mb-4 text-sm leading-relaxed flex-grow">Создание очаровательной ключницы в виде домиков из дерева. Роспись и декор.</p>
+                        <div class="flex items-center justify-between mt-auto pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
+                            <span class="text-xl font-bold text-primary">1500 ₽</span>
+                            <button class="md-btn md-btn-tonal h-8 px-4 text-xs" onclick="signUpViaTelegram('МК Ключница')">Записаться</button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <div data-animate="fade-up" class="mt-12 p-10 rounded-[32px] bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] text-center">
@@ -754,7 +939,7 @@
                         <img src="https://github.com/XtraDamage/Tonimage-/blob/main/venok.png?raw=true" class="w-full h-full object-cover hover:scale-110 transition-transform duration-500">
                     </div>
                     <div class="p-5 flex flex-col flex-grow">
-                        <h4 class="text-xl brand-font font-bold text-on-surface">интерьерные венки</h4>
+                        <h4 class="text-xl brand-font font-bold text-on-surface">Интерьерные венки</h4>
                         <p class="text-sm text-on-surface-variant mt-2 flex-grow">Ручная работа, отличное украшение для вашего дома</p>
                         <span class="mt-4 text-lg font-bold text-primary">от 1000 ₽</span>
                     </div>
@@ -764,15 +949,13 @@
                 <!-- реставрация -->
                 <div data-animate="zoom-in" data-delay="100" class="md-card md-card-elevated flex flex-col">
                     <div class="p-5 flex flex-col flex-grow">
-                        <h4 class="text-xl brand-font font-bold text-on-surface">реставрация мебели:</h4>
+                        <h4 class="text-xl brand-font font-bold text-on-surface">Реставрация мебели:</h4>
                         <p class="text-sm text-on-surface-variant mt-2 flex-grow"></p>
                         <span class="mt-4 text-lg font-bold text-primary">стулья: от 2000 ₽</span>
                         <span class="mt-4 text-lg font-bold text-primary">табуреты: от 1500 ₽</span>
                         <span class="mt-4 text-lg font-bold text-primary">тумбочки: от 2000 ₽</span>
                     </div>
                 </div>
-            </div>
-            </div>
             </div>
             
             <div class="mt-12 flex justify-center">
@@ -1199,7 +1382,7 @@
         // --- GALLERY LOGIC (NEW) ---
         // Configuration
         const GALLERY_BASE_URL = 'https://raw.githubusercontent.com/ShalfeyArt/gallery/main/';
-        const GALLERY_IMAGE_COUNT = 20; // Change this number when you upload more photos
+        const GALLERY_IMAGE_COUNT = 17; // Change this number when you upload more photos
         const GALLERY_FILE_EXTENSION = '.jpg'; // Ensure your files are named 1.jpg, 2.jpg, etc.
 
         function renderGallery() {
